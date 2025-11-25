@@ -1,0 +1,151 @@
+name: Build and Publish
+
+on:
+  release:
+    types: [ published ]
+
+jobs:
+  # =========================================================
+  # Job 1: Prepare Environment and Build Core
+  # =========================================================
+  prepare_and_build:
+    name: 🛠️ Build
+    runs-on: ubuntu-latest
+    outputs:
+      release_status: ${{ contains(github.ref_name, 'Alpha') && 'alpha' || contains(github.ref_name, 'Beta') && 'beta' || 'release' }}
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup Java 17 Environment
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: 🔧 Grant Gradle Execution Permissions
+        run: chmod +x ./gradlew
+
+      - name: 🐘 Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: 🏗️ Execute Gradle Build
+        run: ./gradlew build
+
+      - name: 📤 Stage Build Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mod-artifacts
+          path: |
+            fabric/build/libs/QuickAlias-Fabric-*.jar
+            forge/build/libs/QuickAlias-Forge-*.jar
+            !**/*-javadoc.jar
+            !**/*-sources.jar
+          retention-days: 1
+
+  # =========================================================
+  # Job 2: GitHub Release Handling
+  # =========================================================
+  github-release:
+    name: 📦 Update GitHub Release
+    needs: prepare_and_build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    if: always()
+
+    steps:
+      - name: 📥 Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: mod-artifacts
+          path: artifacts
+
+      - name: ☁️ Upload Jar to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**/*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🔄 Update Release Status
+        if: needs.prepare_and_build.outputs.release_status == 'release'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const release_id = context.payload.release.id;
+            
+            console.log(`Updating release ${release_id} to non-prerelease status.`);
+            
+            await github.rest.repos.updateRelease({
+              owner,
+              repo,
+              release_id,
+              prerelease: false,
+              make_latest: "true"
+            });
+
+  # =========================================================
+  # Job 3: Publish to Mod Sites
+  # =========================================================
+  mod-publish:
+    name: 🚀 Publish to Mod Sites
+    needs: prepare_and_build
+    runs-on: ubuntu-latest
+
+    env:
+      MODRINTH_PROJECT_ID: jGHTlhbU
+      CURSEFORGE_PROJECT_ID: 1391158
+
+    steps:
+      - name: 📥 Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: mod-artifacts
+          path: artifacts
+
+      # --- Fabric Branch ---
+      - name: 🚀 Publish Fabric & Quilt Version
+        uses: kir-antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ env.MODRINTH_PROJECT_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          curseforge-id: ${{ env.CURSEFORGE_PROJECT_ID }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+
+          name: "[Fabric] ${{ github.event.release.name }}"
+          version: "${{ github.event.release.tag_name }}-fabric"
+          version-type: ${{ needs.prepare_and_build.outputs.release_status }}
+          changelog: ${{ github.event.release.body }}
+
+          loaders: |
+            fabric
+            quilt
+          game-versions: |
+            1.20.1
+
+          files: artifacts/fabric/build/libs/QuickAlias-Fabric-*.jar
+
+      # --- Forge Branch ---
+      - name: 🚀 Publish Forge & NeoForge Version
+        uses: kir-antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ env.MODRINTH_PROJECT_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          curseforge-id: ${{ env.CURSEFORGE_PROJECT_ID }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+
+          name: "[Forge] ${{ github.event.release.name }}"
+          version: "${{ github.event.release.tag_name }}-forge"
+          version-type: ${{ needs.prepare_and_build.outputs.release_status }}
+          changelog: ${{ github.event.release.body }}
+
+          loaders: |
+            forge
+            neoforge
+          game-versions: |
+            1.20.1
+
+          files: artifacts/forge/build/libs/QuickAlias-Forge-*.jar

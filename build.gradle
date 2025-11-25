@@ -1,0 +1,18 @@
+plugins {
+    id 'fabric-loom' version '1.9-SNAPSHOT' apply(false)
+    id 'net.neoforged.moddev.legacyforge' version '2.0.77' apply(false)
+}
+
+allprojects {
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+    }
+
+    tasks.withType(Javadoc).tap {
+        configureEach {
+            options.encoding = 'UTF-8'
+            options.charSet = 'UTF-8'
+            options.addStringOption('Xdoclint:none', '-quiet')
+        }
+    }
+}

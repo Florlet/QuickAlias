@@ -1,0 +1,39 @@
+{
+    "schemaVersion": 1,
+    "id": "quickalias",
+    "version": "${version}",
+    "name": "${mod_name}",
+    "description": "${description}",
+    "authors": [
+        "${mod_author}"
+    ],
+    "contact": {
+        "homepage": "https://quickalias.pages.dev",
+        "sources": "https://github.com/Florlet/QuickAlias",
+        "issues": "https://github.com/Florlet/QuickAlias/issues"
+    },
+    "license": "${license}",
+    "icon": "quickalias.png",
+    "environment": "client",
+    "entrypoints": {
+        "client": [
+            "com.florlet.quickalias.fabric.QuickAliasFabric"
+        ],
+        "modmenu": [
+            "com.florlet.quickalias.fabric.QuickAliasModMenuApi"
+        ]
+    },
+    "mixins": [
+        "quickalias.mixins.json",
+        "quickalias.fabric.mixins.json"
+    ],
+    "depends": {
+        "fabricloader": ">=0.14",
+        "minecraft": "=${minecraft_version}",
+        "java": ">=17"
+    },
+    "suggests": {
+        "fabric-api": "*",
+        "modmenu": "*"
+    }
+}
