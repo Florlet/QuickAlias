@@ -575,25 +575,25 @@ public class AliasEditorScreen extends Screen {
     }
 
     @Override
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
-        if (delta == 0) return false;
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (scrollY == 0) return false;
         double scrollSpeed = 15.0;
         int centerX = this.width / 2;
         int areaLeft = centerX - 120;
         int areaRight = centerX + 120;
         if (mouseX >= areaLeft && mouseX <= areaRight) {
             if (mouseY >= cmdAreaTop && mouseY <= cmdAreaBottom) {
-                commandScrollAmount -= delta * scrollSpeed;
+                commandScrollAmount -= scrollY * scrollSpeed;
                 rebuildInterface();
                 return true;
             }
             if (mouseY >= childAreaTop && mouseY <= childAreaBottom) {
-                childScrollAmount -= delta * scrollSpeed;
+                childScrollAmount -= scrollY * scrollSpeed;
                 rebuildInterface();
                 return true;
             }
         }
-        return super.mouseScrolled(mouseX, mouseY, delta);
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
     private void saveAndClose() {
@@ -618,7 +618,7 @@ public class AliasEditorScreen extends Screen {
 
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics);
+        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         for (BreadcrumbSeparator sep : breadcrumbSeparators)
             guiGraphics.drawString(this.font, sep.text, sep.x, sep.y, 0xAAAAAA);

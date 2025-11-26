@@ -40,6 +40,7 @@ jobs:
           path: |
             fabric/build/libs/QuickAlias-Fabric-*.jar
             forge/build/libs/QuickAlias-Forge-*.jar
+            neoforge/build/libs/QuickAlias-NeoForge-*.jar
             !**/*-javadoc.jar
             !**/*-sources.jar
           retention-days: 1
@@ -124,7 +125,7 @@ jobs:
             fabric
             quilt
           game-versions: |
-            1.20.1
+            1.20.2
 
           files: artifacts/fabric/build/libs/QuickAlias-Fabric-*.jar
 
@@ -144,8 +145,28 @@ jobs:
 
           loaders: |
             forge
-            neoforge
           game-versions: |
-            1.20.1
+            1.20.2
 
           files: artifacts/forge/build/libs/QuickAlias-Forge-*.jar
+
+      # --- NeoForge Branch ---
+      - name: 🚀 Publish NeoForge Version
+        uses: kir-antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ${{ env.MODRINTH_PROJECT_ID }}
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          curseforge-id: ${{ env.CURSEFORGE_PROJECT_ID }}
+          curseforge-token: ${{ secrets.CURSEFORGE_TOKEN }}
+
+          name: "[NeoForge] ${{ github.event.release.name }}"
+          version: "${{ github.event.release.tag_name }}-neoforge"
+          version-type: ${{ needs.prepare_and_build.outputs.release_status }}
+          changelog: ${{ github.event.release.body }}
+
+          loaders: |
+            neoforge
+          game-versions: |
+            1.20.2
+
+          files: artifacts/neoforge/build/libs/QuickAlias-NeoForge-*.jar

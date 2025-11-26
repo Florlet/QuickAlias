@@ -76,8 +76,8 @@ public class SettingsScreen extends Screen {
 
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics);
         super.render(guiGraphics, mouseX, mouseY, partialTick);
+        this.renderDirtBackground(guiGraphics);
         this.aliasList.render(guiGraphics, mouseX, mouseY, partialTick);
 
         // Center Title

@@ -53,18 +53,19 @@ public class ShortcutOverlay {
         return visible;
     }
 
-    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (!visible) return false;
 
         List<AliasNode> roots = ConfigManager.getInstance().getConfig().aliases;
         if (roots.size() <= MAX_VISIBLE_ROWS) return false;
 
-        if (delta < 0) {
+        // Use scrollY (vertical scroll)
+        if (scrollY < 0) {
             if (scrollOffsetL1 < roots.size() - MAX_VISIBLE_ROWS) {
                 scrollOffsetL1++;
                 return true;
             }
-        } else if (delta > 0) {
+        } else if (scrollY > 0) {
             if (scrollOffsetL1 > 0) {
                 scrollOffsetL1--;
                 return true;
@@ -341,7 +342,7 @@ public class ShortcutOverlay {
                 String aliasPath = "/" + String.join(" ", prefixParts) + " ";
 
                 ((ChatScreenAccessor) mc.screen).getInput().setValue(aliasPath);
-                ((ChatScreenAccessor) mc.screen).getInput().moveCursorToEnd();
+                ((ChatScreenAccessor) mc.screen).getInput().moveCursorToEnd(false);
             }
             this.visible = false;
             activePath.clear();

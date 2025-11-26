@@ -1,6 +1,7 @@
 plugins {
-    id 'multiloader-loader'
-    id 'fabric-loom'
+    id 'idea'
+    id 'java'
+    id 'fabric-loom' version '1.9-SNAPSHOT'
 }
 
 repositories {
@@ -12,10 +13,7 @@ repositories {
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
-    mappings loom.layered {
-        officialMojangMappings()
-        parchment("org.parchmentmc.data:parchment-${parchment_minecraft}:${parchment_version}@zip")
-    }
+    mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
     implementation group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.1'
     modImplementation("com.terraformersmc:modmenu:${modmenu_version}")
@@ -43,6 +41,20 @@ loom {
             runDir("run")
         }
     }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    source(project(":common").sourceSets.main.allSource)
+}
+tasks.withType(Javadoc).configureEach {
+    source(project(":common").sourceSets.main.allJava)
+}
+tasks.named("sourcesJar", Jar) {
+    from(project(":common").sourceSets.main.allSource)
+}
+
+processResources {
+    from project(":common").sourceSets.main.resources
 }
 
 remapJar {

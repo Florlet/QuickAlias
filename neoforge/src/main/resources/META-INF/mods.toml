@@ -1,5 +1,5 @@
 modLoader = "javafml"
-loaderVersion = "${forge_loader_version_range}"
+loaderVersion = "${neoforge_loader_version_range}"
 license = "${license}"
 issueTrackerURL = "https://github.com/Florlet/QuickAlias/issues"
 displayURL = "https://quickalias.pages.dev"
@@ -10,18 +10,23 @@ version = "${version}"
 displayName = "${mod_name}"
 logoFile = "${mod_id}.png"
 logoBlur = false
-# credits = "${credits}"
+# credits="${credits}"
 authors = "${mod_author}"
 description = '''${description}'''
 
-[[dependencies.${ mod_id }]]
-modId = "forge"
+[[mixins]]
+config = "${mod_id}.mixins.json"
+[[mixins]]
+config = "${mod_id}.neoforge.mixins.json"
+
+[[dependencies.${mod_id}]]
+modId = "neoforge"
 mandatory = true
-versionRange = "${forge_version_range}"
+versionRange = "${neoforge_loader_version_range}"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.${ mod_id }]]
+[[dependencies.${mod_id}]]
 modId = "minecraft"
 mandatory = true
 versionRange = "${minecraft_version_range}"

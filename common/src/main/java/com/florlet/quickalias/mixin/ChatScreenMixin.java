@@ -171,9 +171,10 @@ public class ChatScreenMixin extends Screen {
     }
 
     @Inject (method = "mouseScrolled", at = @At ("HEAD"), cancellable = true)
-    private void onMouseScrolled(double mouseX, double mouseY, double delta, CallbackInfoReturnable<Boolean> cir) {
+    private void onMouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY,
+                                 CallbackInfoReturnable<Boolean> cir) {
         if (this.quickAlias$shortcutOverlay != null && this.quickAlias$shortcutOverlay.isVisible()) {
-            if (this.quickAlias$shortcutOverlay.mouseScrolled(mouseX, mouseY, delta)) {
+            if (this.quickAlias$shortcutOverlay.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
                 cir.setReturnValue(true);
             }
         }
