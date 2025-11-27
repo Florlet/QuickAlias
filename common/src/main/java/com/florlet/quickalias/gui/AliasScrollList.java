@@ -38,7 +38,7 @@ public class AliasScrollList extends ObjectSelectionList<AliasScrollList.AliasEn
 
     public AliasScrollList(Minecraft minecraft, SettingsScreen parentScreen, int width, int height, int top, int bottom,
                            int itemHeight, boolean isImportMode) {
-        super(minecraft, width, height, top, bottom, 24);
+        super(minecraft, width, bottom - top, top, itemHeight);
         this.parentScreen = parentScreen;
         this.isImportMode = isImportMode;
         if (!isImportMode) {

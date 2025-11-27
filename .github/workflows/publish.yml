@@ -125,12 +125,12 @@ jobs:
             fabric
             quilt
           game-versions: |
-            1.20.2
+            ${{ github.event.release.target_commitish }}
 
           files: artifacts/fabric/build/libs/QuickAlias-Fabric-*.jar
 
       # --- Forge Branch ---
-      - name: 🚀 Publish Forge & NeoForge Version
+      - name: 🚀 Publish Forge Version
         uses: kir-antipov/mc-publish@v3.3
         with:
           modrinth-id: ${{ env.MODRINTH_PROJECT_ID }}
@@ -146,7 +146,7 @@ jobs:
           loaders: |
             forge
           game-versions: |
-            1.20.2
+            ${{ github.event.release.target_commitish }}
 
           files: artifacts/forge/build/libs/QuickAlias-Forge-*.jar
 
@@ -167,6 +167,6 @@ jobs:
           loaders: |
             neoforge
           game-versions: |
-            1.20.2
+            ${{ github.event.release.target_commitish }}
 
           files: artifacts/neoforge/build/libs/QuickAlias-NeoForge-*.jar
