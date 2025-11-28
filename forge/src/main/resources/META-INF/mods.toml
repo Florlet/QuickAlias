@@ -3,6 +3,7 @@ loaderVersion = "${forge_loader_version_range}"
 license = "${license}"
 issueTrackerURL = "https://github.com/Florlet/QuickAlias/issues"
 displayURL = "https://quickalias.pages.dev"
+clientSideOnly=true
 
 [[mods]]
 modId = "${mod_id}"

@@ -54,7 +54,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    if: always()
 
     steps:
       - name: 📥 Download Build Artifacts
