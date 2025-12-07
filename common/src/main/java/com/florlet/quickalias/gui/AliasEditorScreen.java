@@ -31,7 +31,7 @@ public class AliasEditorScreen extends Screen {
     private EditBox aliasInput;
     private FlatButton saveButton;
     private FlatButton addSubChildBtn;
-    private FlatButton addEndNodeBtn; // New button for adding {END}
+    private FlatButton addEndNodeBtn;
 
     // Layout Bounds
     private int cmdAreaTop, cmdAreaBottom;
@@ -257,7 +257,7 @@ public class AliasEditorScreen extends Screen {
             boolean isVisible = (itemY + ITEM_HEIGHT > cmdAreaTop) && (itemY < cmdAreaBottom);
             String cmd = workingNode.getCommands().get(i);
             EditBox cmdBox = new EditBox(this.font, centerX - 100, itemY + 2, 200, INPUT_HEIGHT,
-                                         Component.literal("Cmd"));
+                                         Component.translatable("quickalias.editor.label.cmd"));
             cmdBox.setMaxLength(256);
             cmdBox.setValue(cmd);
             cmdBox.visible = isVisible;
@@ -278,20 +278,21 @@ public class AliasEditorScreen extends Screen {
             boolean isLastOne = workingNode.getCommands().size() == 1;
 
             FlatButton delBtn = new FlatButton(centerX + 105, itemY + 2, BUTTON_SIZE, BUTTON_SIZE,
-                                               Component.literal("×").withStyle(s -> s.withColor(0xFF5555)), btn -> {
-                if (isLastOne && hasChildren) {
-                    workingNode.getCommands().set(0, "");
-                    cmdBox.setValue("");
-                    validate();
-                } else if (isLastOne) {
-                    workingNode.getCommands().set(0, "");
-                    cmdBox.setValue("");
-                    validate();
-                } else {
-                    workingNode.getCommands().remove(idx);
-                    rebuildInterface();
-                }
-            });
+                                               Component.literal("×").withStyle(s -> s.withColor(0xFF5555)), 0, -1,
+                                               btn -> {
+                                                   if (isLastOne && hasChildren) {
+                                                       workingNode.getCommands().set(0, "");
+                                                       cmdBox.setValue("");
+                                                       validate();
+                                                   } else if (isLastOne) {
+                                                       workingNode.getCommands().set(0, "");
+                                                       cmdBox.setValue("");
+                                                       validate();
+                                                   } else {
+                                                       workingNode.getCommands().remove(idx);
+                                                       rebuildInterface();
+                                                   }
+                                               });
             delBtn.visible = isVisible;
             this.addWidget(delBtn);
             this.commandWidgets.add(delBtn);
@@ -377,10 +378,11 @@ public class AliasEditorScreen extends Screen {
             this.childWidgets.add(childBtn);
 
             FlatButton delBtn = new FlatButton(centerX + 105, itemY + 2, BUTTON_SIZE, BUTTON_SIZE,
-                                               Component.literal("×").withStyle(s -> s.withColor(0xFF5555)), btn -> {
-                workingNode.getChildren().remove(child);
-                rebuildInterface();
-            });
+                                               Component.literal("×").withStyle(s -> s.withColor(0xFF5555)), 0, -1,
+                                               btn -> {
+                                                   workingNode.getChildren().remove(child);
+                                                   rebuildInterface();
+                                               });
             delBtn.visible = isVisible;
             this.addWidget(delBtn);
             this.childWidgets.add(delBtn);
@@ -649,7 +651,7 @@ public class AliasEditorScreen extends Screen {
             float scale = 1.5f;
             guiGraphics.pose().translate(labelAnchorX + 4, aliasInput.getY() + 2, 0);
             guiGraphics.pose().scale(scale, scale, 1.0f);
-            guiGraphics.drawString(this.font, "/", 0, 0, 0xAAAAAA);
+            guiGraphics.drawString(this.font, "/", 2, 0, 0xAAAAAA);
             guiGraphics.pose().popPose();
         }
 
