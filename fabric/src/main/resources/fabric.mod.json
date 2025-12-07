@@ -13,7 +13,7 @@
         "issues": "https://github.com/Florlet/QuickAlias/issues"
     },
     "license": "${license}",
-    "icon": "quickalias.png",
+    "icon": "quickalias_icon.png",
     "environment": "client",
     "entrypoints": {
         "client": [
