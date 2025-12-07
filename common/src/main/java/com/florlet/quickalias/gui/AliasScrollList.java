@@ -132,16 +132,16 @@ public class AliasScrollList extends ObjectSelectionList<AliasScrollList.AliasEn
                 this.downBtn = new FlatButton(0, 0, 12, 8, Component.empty(), btn -> move(1));
                 this.downBtn.active = canSort;
                 this.editBtn = new FlatButton(0, 0, 30, 16, Component.translatable("quickalias.gui.edit"),
-                                              btn -> Minecraft.getInstance()
-                                                      .setScreen(
-                                                              new AliasEditorScreen(AliasScrollList.this.parentScreen,
-                                                                                    node, false)));
+                                              btn -> Minecraft.getInstance().setScreen(
+                                                      new AliasEditorScreen(AliasScrollList.this.parentScreen, node,
+                                                                            false)));
                 this.deleteBtn = new FlatButton(0, 0, 16, 16,
-                                                Component.literal("×").withStyle(s -> s.withColor(0xFF5555)), btn -> {
-                    ConfigManager.getInstance().getConfig().aliases.remove(node);
-                    ConfigManager.getInstance().save();
-                    AliasScrollList.this.refreshList();
-                });
+                                                Component.literal("×").withStyle(s -> s.withColor(0xFF5555)), 0, -1,
+                                                btn -> {
+                                                    ConfigManager.getInstance().getConfig().aliases.remove(node);
+                                                    ConfigManager.getInstance().save();
+                                                    AliasScrollList.this.refreshList();
+                                                });
             } else {
                 this.upBtn = null;
                 this.downBtn = null;
@@ -183,7 +183,7 @@ public class AliasScrollList extends ObjectSelectionList<AliasScrollList.AliasEn
                     guiGraphics.pose().pushPose();
                     guiGraphics.pose().scale(scale, scale, 1.0f);
                     guiGraphics.drawString(Minecraft.getInstance().font, "▲",
-                                           (int) ((currentX + 6 - (Minecraft.getInstance().font.width(
+                                           (int) ((currentX + 7 - (Minecraft.getInstance().font.width(
                                                    "▲") * scale / 2)) / scale), (int) ((bgTop + 1) / scale), 0xFFFFFF);
                     guiGraphics.pose().popPose();
 
@@ -194,7 +194,7 @@ public class AliasScrollList extends ObjectSelectionList<AliasScrollList.AliasEn
                     guiGraphics.pose().pushPose();
                     guiGraphics.pose().scale(scale, scale, 1.0f);
                     guiGraphics.drawString(Minecraft.getInstance().font, "▼",
-                                           (int) ((currentX + 6 - (Minecraft.getInstance().font.width(
+                                           (int) ((currentX + 7 - (Minecraft.getInstance().font.width(
                                                    "▼") * scale / 2)) / scale),
                                            (int) ((bgTop + btnHeight * 2 - 7) / scale), 0xFFFFFF);
                     guiGraphics.pose().popPose();
@@ -251,7 +251,7 @@ public class AliasScrollList extends ObjectSelectionList<AliasScrollList.AliasEn
                 int buttonsWidth = isImportMode ? 0 : 55;
                 int availableWidth = (left + width) - contentX - buttonsWidth - 5;
 
-                Component formattedCmd = formatCommand(rawCmds);
+                formatCommand(rawCmds);
 
                 // Truncate raw string first, then format.
                 String truncatedRaw = Minecraft.getInstance().font.plainSubstrByWidth(rawCmds, availableWidth);
