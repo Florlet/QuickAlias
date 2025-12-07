@@ -2,6 +2,7 @@ package com.florlet.quickalias.gui;
 
 import com.florlet.quickalias.config.ConfigManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
@@ -18,8 +19,18 @@ public class FlatButton extends Button {
     private final int colorHover = 0x80555555;  // Dark Grey
     private final int colorDisabled = 0x20000000; // Faint black for disabled
 
+    private int textXOffset = 0;
+    private int textYOffset = 0;
+
     public FlatButton(int x, int y, int width, int height, Component message, OnPress onPress) {
         super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
+    }
+
+    public FlatButton(int x, int y, int width, int height, Component message, int xOffset, int yOffset,
+                      OnPress onPress) {
+        super(x, y, width, height, message, onPress, DEFAULT_NARRATION);
+        this.textXOffset = xOffset;
+        this.textYOffset = yOffset;
     }
 
     @Override
@@ -33,6 +44,12 @@ public class FlatButton extends Button {
             // Use vanilla rendering logic
             super.renderWidget(guiGraphics, mouseX, mouseY, partialTick);
         }
+    }
+
+    @Override
+    public void renderString(GuiGraphics guiGraphics, Font font, int color) {
+        guiGraphics.drawCenteredString(font, this.getMessage(), this.getX() + this.width / 2 + textXOffset,
+                                       this.getY() + (this.height - 8) / 2 + textYOffset, color);
     }
 
     private void renderFlat(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
@@ -50,7 +67,7 @@ public class FlatButton extends Button {
         int textColor;
         if (this.getMessage().getStyle().getColor() != null) {
             textColor = this.getMessage().getStyle().getColor().getValue();
-            // Dim it slightly if disabled, though usually colored buttons are active
+            // Dim it slightly if disabled
             if (!this.active) {
                 textColor = (textColor & 0xFEFEFE) >> 1 | 0xFF000000; // Simple dimming
             }
@@ -58,8 +75,7 @@ public class FlatButton extends Button {
             textColor = this.active ? 0xFFFFFF : 0xA0A0A0;
         }
 
-        guiGraphics.drawCenteredString(Minecraft.getInstance().font, this.getMessage(), this.getX() + this.width / 2,
-                                       this.getY() + (this.height - 8) / 2, textColor);
+        this.renderString(guiGraphics, Minecraft.getInstance().font, textColor);
     }
 
     // Expose protected fields from AbstractWidget for resizing
