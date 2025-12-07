@@ -18,11 +18,28 @@ jobs:
       - name: 📥 Checkout Repository
         uses: actions/checkout@v4
 
-      - name: ☕ Setup Java 17 Environment
+      - name: 📝 Read Java Version
+        id: java_ver
+        run: |
+          if [ -f gradle.properties ]; then
+            JAVA_VERSION=$(grep "java_version" gradle.properties | cut -d'=' -f2 | tr -d '[:space:]')
+          fi
+
+          if [ -z "$JAVA_VERSION" ]; then
+            JAVA_VERSION=21
+            echo "java_version not found in gradle.properties, defaulting to $JAVA_VERSION"
+          else
+            echo "Found java_version=$JAVA_VERSION in gradle.properties"
+          fi
+
+          echo "version=$JAVA_VERSION" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: ☕ Setup Java Environment
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: ${{ steps.java_ver.outputs.version }}
 
       - name: 🔧 Grant Gradle Execution Permissions
         run: chmod +x ./gradlew
@@ -43,6 +60,7 @@ jobs:
             neoforge/build/libs/QuickAlias-NeoForge-*.jar
             !**/*-javadoc.jar
             !**/*-sources.jar
+          if-no-files-found: ignore
           retention-days: 1
 
   # =========================================================
@@ -76,9 +94,9 @@ jobs:
           script: |
             const { owner, repo } = context.repo;
             const release_id = context.payload.release.id;
-            
+
             console.log(`Updating release ${release_id} to non-prerelease status.`);
-            
+
             await github.rest.repos.updateRelease({
               owner,
               repo,
@@ -106,8 +124,40 @@ jobs:
           name: mod-artifacts
           path: artifacts
 
+      - name: 🔍 Check Artifact Existence
+        id: check_files
+        run: |
+          # check Fabric
+          if ls artifacts/fabric/build/libs/QuickAlias-Fabric-*.jar 1> /dev/null 2>&1; then
+            echo "Fabric artifact found."
+            echo "fabric_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Fabric artifact NOT found."
+            echo "fabric_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          # check Forge
+          if ls artifacts/forge/build/libs/QuickAlias-Forge-*.jar 1> /dev/null 2>&1; then
+            echo "Forge artifact found."
+            echo "forge_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Forge artifact NOT found."
+            echo "forge_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          # check NeoForge
+          if ls artifacts/neoforge/build/libs/QuickAlias-NeoForge-*.jar 1> /dev/null 2>&1; then
+            echo "NeoForge artifact found."
+            echo "neoforge_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "NeoForge artifact NOT found."
+            echo "neoforge_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+        shell: bash
+
       # --- Fabric Branch ---
       - name: 🚀 Publish Fabric & Quilt Version
+        if: steps.check_files.outputs.fabric_exists == 'true'
         uses: kir-antipov/mc-publish@v3.3
         with:
           modrinth-id: ${{ env.MODRINTH_PROJECT_ID }}
@@ -130,6 +180,7 @@ jobs:
 
       # --- Forge Branch ---
       - name: 🚀 Publish Forge Version
+        if: steps.check_files.outputs.forge_exists == 'true'
         uses: kir-antipov/mc-publish@v3.3
         with:
           modrinth-id: ${{ env.MODRINTH_PROJECT_ID }}
@@ -151,6 +202,7 @@ jobs:
 
       # --- NeoForge Branch ---
       - name: 🚀 Publish NeoForge Version
+        if: steps.check_files.outputs.neoforge_exists == 'true'
         uses: kir-antipov/mc-publish@v3.3
         with:
           modrinth-id: ${{ env.MODRINTH_PROJECT_ID }}
