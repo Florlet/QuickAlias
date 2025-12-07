@@ -6,7 +6,7 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.neoforge.client.ConfigScreenHandler;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 
 @Mod (QuickAliasClient.MOD_ID)
 public class QuickAliasNeoForge {
@@ -14,9 +14,8 @@ public class QuickAliasNeoForge {
         if (FMLEnvironment.dist == Dist.CLIENT) {
             QuickAliasClient.init();
 
-            ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class,
-                                                           () -> new ConfigScreenHandler.ConfigScreenFactory(
-                                                                   (mc, parent) -> new SettingsScreen(parent)));
+            ModLoadingContext.get().registerExtensionPoint(IConfigScreenFactory.class,
+                                                           () -> (mc, parent) -> new SettingsScreen(parent));
         }
     }
 }

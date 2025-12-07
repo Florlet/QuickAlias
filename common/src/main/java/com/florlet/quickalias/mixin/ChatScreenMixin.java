@@ -195,9 +195,9 @@ public class ChatScreenMixin extends Screen {
     }
 
     @Inject (method = "handleChatInput", at = @At ("HEAD"), cancellable = true)
-    private void onHandleChatInput(String message, boolean addToHistory, CallbackInfoReturnable<Boolean> cir) {
+    private void onHandleChatInput(String message, boolean addToHistory, CallbackInfo ci) {
         if (InputHandler.handleChatInput(message)) {
-            cir.setReturnValue(true);
+            ci.cancel();
         }
     }
 }

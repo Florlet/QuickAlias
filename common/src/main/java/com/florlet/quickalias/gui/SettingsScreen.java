@@ -43,7 +43,7 @@ public class SettingsScreen extends Screen {
         this.addRenderableWidget(this.searchBox);
 
         // Add Root Node Button [+]
-        this.addRenderableWidget(new FlatButton(this.width - 30, 28, 16, 16, Component.literal("+"), (btn) -> {
+        this.addRenderableWidget(new FlatButton(this.width - 30, 28, 16, 16, Component.literal("+"), 0, -1, (btn) -> {
             AliasNode newNode = new AliasNode();
             this.minecraft.setScreen(new AliasEditorScreen(this, newNode, true));
         }));
@@ -77,7 +77,7 @@ public class SettingsScreen extends Screen {
     @Override
     public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
-        this.renderDirtBackground(guiGraphics);
+        this.renderMenuBackground(guiGraphics);
         this.aliasList.render(guiGraphics, mouseX, mouseY, partialTick);
 
         // Center Title
