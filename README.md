@@ -1,4 +1,4 @@
-![QuickAlias](https://media.forgecdn.net/attachments/1403/433/quickaliasbanner-png.png)
+![QuickAlias](https://raw.githubusercontent.com/Florlet/QuickAliasWiki/main/static/img/QuickAliasBanner.png)
 
 <p align="center">
   <!-- Modrinth -->
@@ -13,6 +13,8 @@
   English ·
   <a href="./README_zh-CN.md">简体中文</a>
 </p>
+
+![QuickAlias-demo](https://raw.githubusercontent.com/Florlet/QuickAliasWiki/main/static/img/QuickAlias-time_set_midnight.gif)
 
 **QuickAlias** is a client-side utility modification designed to optimize command interaction efficiency within
 Minecraft. It features a comprehensive visual alias editor, hierarchical command menus, dynamic variable parsing, and a
@@ -43,6 +45,8 @@ overlay panel.
       dimension IDs.
 * **🖥️ Overlay Navigation**: The chat interface integrates a shortcut entry (the `/` icon), which summons a visual alias
   navigation menu, enabling command execution without typing.
+
+![QuickAlias-editor](https://raw.githubusercontent.com/Florlet/QuickAliasWiki/main/static/img/QuickAlias-player.png)
 
 ## 📖 Usage Guide
 
