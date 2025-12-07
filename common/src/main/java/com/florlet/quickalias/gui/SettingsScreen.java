@@ -43,7 +43,7 @@ public class SettingsScreen extends Screen {
         this.addRenderableWidget(this.searchBox);
 
         // Add Root Node Button [+]
-        this.addRenderableWidget(new FlatButton(this.width - 30, 28, 20, 16, Component.literal("+"), (btn) -> {
+        this.addRenderableWidget(new FlatButton(this.width - 30, 28, 16, 16, Component.literal("+"), (btn) -> {
             AliasNode newNode = new AliasNode();
             this.minecraft.setScreen(new AliasEditorScreen(this, newNode, true));
         }));
