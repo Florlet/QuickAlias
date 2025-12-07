@@ -1,4 +1,4 @@
-![QuickAlias](https://media.forgecdn.net/attachments/1403/433/quickaliasbanner-png.png)
+![QuickAlias](https://raw.githubusercontent.com/Florlet/QuickAliasWiki/main/static/img/QuickAliasBanner.png)
 
 <p align="center">
   <!-- Modrinth -->
@@ -8,6 +8,8 @@
   <!-- Wiki -->
   <a href="https://quickalias.pages.dev"><img src="https://img.shields.io/badge/Documentation-Wiki-4682B4?style=for-the-badge&logo=docusaurus" alt="Wiki"/></a>
 </p>
+
+![QuickAlias-demo](https://raw.githubusercontent.com/Florlet/QuickAliasWiki/main/static/img/QuickAlias-time_set_midnight.gif)
 
 **QuickAlias** 是一款致力于优化 Minecraft 指令交互体验的客户端模组。提供可视化别名编辑器、层级化指令菜单、动态变量解析及快捷指令面板。
 
@@ -25,6 +27,8 @@
   * **自动补全**: 自定义别名将无缝集成至游戏聊天栏的智能提示系统中，提供与原版指令一致的交互体验。
   * **智能建议**: 命名为 `{id}` 的变量将自动补全在线玩家名称，`{dim}` 则自动补全维度 ID。
 * **🖥️ 快捷覆盖层**: 聊天界面集成了快捷入口（`/` 图标），可唤出可视化的别名导航菜单，实现免输入的指令执行。
+
+![QuickAlias-editor](https://raw.githubusercontent.com/Florlet/QuickAliasWiki/main/static/img/QuickAlias-player.png)
 
 ## 📖 使用指南
 
