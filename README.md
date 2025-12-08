@@ -2,7 +2,7 @@
 
 <p align="center">
   <!-- Modrinth -->
-  <a href="https://modrinth.com/project/quickalias"><img src="https://img.shields.io/modrinth/dt/jGHTlhbU?logo=modrinth&label=Modrinth&style=for-the-badge" alt="Modrinth Downloads"/></a>
+  <a href="https://modrinth.com/mod/quickalias"><img src="https://img.shields.io/modrinth/dt/jGHTlhbU?logo=modrinth&label=Modrinth&style=for-the-badge" alt="Modrinth Downloads"/></a>
   <!-- CurseForge -->
   <a href="https://www.curseforge.com/minecraft/mc-mods/quickalias"><img src="https://img.shields.io/curseforge/dt/1391158?logo=curseforge&label=CurseForge&style=for-the-badge" alt="CurseForge Downloads"/></a>
   <!-- Wiki -->
@@ -14,8 +14,6 @@
   <a href="./README_zh-CN.md">简体中文</a>
 </p>
 
-![QuickAlias-demo](https://raw.githubusercontent.com/Florlet/QuickAliasWiki/main/static/img/QuickAlias-time_set_midnight.gif)
-
 **QuickAlias** is a client-side utility modification designed to optimize command interaction efficiency within
 Minecraft. It features a comprehensive visual alias editor, hierarchical command menus, dynamic variable parsing, and a
 quick access command panel.
@@ -23,6 +21,8 @@ quick access command panel.
 This mod aims to resolve the tediousness associated with manual entry of repetitive command strings. Users can construct
 customized command hierarchies and access them seamlessly via standard chat auto-completion or the convenient visual
 overlay panel.
+
+![QuickAlias-demo](https://raw.githubusercontent.com/Florlet/QuickAliasWiki/main/static/img/QuickAlias-time_set_midnight.gif)
 
 ## ✨ Key Features
 
