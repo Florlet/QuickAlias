@@ -2,18 +2,18 @@
 
 <p align="center">
   <!-- Modrinth -->
-  <a href="https://modrinth.com/project/quickalias"><img src="https://img.shields.io/modrinth/dt/jGHTlhbU?logo=modrinth&label=Modrinth&style=for-the-badge" alt="Modrinth Downloads"/></a>
+  <a href="https://modrinth.com/mod/quickalias"><img src="https://img.shields.io/modrinth/dt/jGHTlhbU?logo=modrinth&label=Modrinth&style=for-the-badge" alt="Modrinth Downloads"/></a>
   <!-- CurseForge -->
   <a href="https://www.curseforge.com/minecraft/mc-mods/quickalias"><img src="https://img.shields.io/curseforge/dt/1391158?logo=curseforge&label=CurseForge&style=for-the-badge" alt="CurseForge Downloads"/></a>
   <!-- Wiki -->
   <a href="https://quickalias.pages.dev"><img src="https://img.shields.io/badge/Documentation-Wiki-4682B4?style=for-the-badge&logo=docusaurus" alt="Wiki"/></a>
 </p>
 
-![QuickAlias-demo](https://raw.githubusercontent.com/Florlet/QuickAliasWiki/main/static/img/QuickAlias-time_set_midnight.gif)
-
 **QuickAlias** 是一款致力于优化 Minecraft 指令交互体验的客户端模组。提供可视化别名编辑器、层级化指令菜单、动态变量解析及快捷指令面板。
 
 本模组旨在解决繁琐的手动指令输入痛点。可构建自定义的指令层级体系，并通过原生的聊天栏自动补全功能或便捷的可视化面板进行调用。
+
+![QuickAlias-demo](https://raw.githubusercontent.com/Florlet/QuickAliasWiki/main/static/img/QuickAlias-time_set_midnight.gif)
 
 ## ✨ 核心特性
 
