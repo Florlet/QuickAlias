@@ -74,7 +74,8 @@ tasks.withType(Test).configureEach {
 }
 
 jar {
-    manifest.attributes(["MixinConfigs": "${mod_id}.mixins.json,${mod_id}.forge.mixins.json"])
-
+    manifest {
+        attributes["MixinConfigs"] = "${mod_id}.mixins.json,${mod_id}.forge.mixins.json"
+    }
     archiveBaseName.set("${mod_name}-Forge-mc${minecraft_version}")
 }
