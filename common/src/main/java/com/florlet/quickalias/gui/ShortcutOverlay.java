@@ -2,6 +2,7 @@ package com.florlet.quickalias.gui;
 
 import com.florlet.quickalias.config.AliasNode;
 import com.florlet.quickalias.config.ConfigManager;
+import com.florlet.quickalias.core.InputHandler;
 import com.florlet.quickalias.core.VariableResolver;
 import com.florlet.quickalias.mixin.ChatScreenAccessor;
 import net.minecraft.client.Minecraft;
@@ -382,17 +383,28 @@ public class ShortcutOverlay {
 
             if (accumulatedCommands.isEmpty()) return;
 
-            for (String cmd : accumulatedCommands) {
-                // Resolve ONLY context variables, pass empty Map since no variables captured
-                String finalCmd = VariableResolver.resolve(cmd, Collections.emptyMap());
+            boolean useVanilla = ConfigManager.getInstance().getConfig().settings.useVanillaChatInput;
 
-                if (finalCmd.trim().isEmpty()) continue;
+            try {
+                InputHandler.isExecutingAlias = true;
+                for (String cmd : accumulatedCommands) {
+                    // Resolve ONLY context variables, pass empty Map since no variables captured
+                    String finalCmd = VariableResolver.resolve(cmd, Collections.emptyMap());
 
-                if (finalCmd.startsWith("/")) {
-                    mc.player.connection.sendCommand(finalCmd.substring(1));
-                } else {
-                    mc.player.connection.sendChat(finalCmd);
+                    if (finalCmd.trim().isEmpty()) continue;
+
+                    if (useVanilla) {
+                        InputHandler.sendThroughClientChat(mc, finalCmd);
+                    } else {
+                        if (finalCmd.startsWith("/")) {
+                            mc.player.connection.sendCommand(finalCmd.substring(1));
+                        } else {
+                            mc.player.connection.sendChat(finalCmd);
+                        }
+                    }
                 }
+            } finally {
+                InputHandler.isExecutingAlias = false;
             }
 
             this.visible = false;

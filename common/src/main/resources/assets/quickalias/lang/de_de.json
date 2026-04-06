@@ -23,6 +23,7 @@
     "quickalias.config.title": "Globale Einstellungen",
     "quickalias.config.show_settings": "Einstellungs-Button: %s",
     "quickalias.config.show_shortcut": "Shortcut-Button: %s",
+    "quickalias.config.vanilla_chat_input": "Vanilla-Chat-Verarbeitung: %s",
     "quickalias.config.button_style": "Button-Stil: %s",
     "quickalias.config.style.flat": "Flach",
     "quickalias.config.style.vanilla": "Vanilla",

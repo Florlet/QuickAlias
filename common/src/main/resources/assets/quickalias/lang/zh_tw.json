@@ -23,6 +23,7 @@
     "quickalias.config.title": "全域偏好設定",
     "quickalias.config.show_settings": "設定按鈕: %s",
     "quickalias.config.show_shortcut": "快捷選單按鈕: %s",
+    "quickalias.config.vanilla_chat_input": "原版聊天處理：%s",
     "quickalias.config.button_style": "按鈕風格: %s",
     "quickalias.config.style.flat": "扁平",
     "quickalias.config.style.vanilla": "原版",

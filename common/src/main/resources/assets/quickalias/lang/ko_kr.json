@@ -23,6 +23,7 @@
     "quickalias.config.title": "전역 설정",
     "quickalias.config.show_settings": "설정 버튼: %s",
     "quickalias.config.show_shortcut": "단축키 버튼: %s",
+    "quickalias.config.vanilla_chat_input": "바닐라 채팅 처리: %s",
     "quickalias.config.button_style": "버튼 스타일: %s",
     "quickalias.config.style.flat": "플랫",
     "quickalias.config.style.vanilla": "바닐라",

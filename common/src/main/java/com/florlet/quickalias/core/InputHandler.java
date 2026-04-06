@@ -3,6 +3,7 @@ package com.florlet.quickalias.core;
 import com.florlet.quickalias.config.AliasNode;
 import com.florlet.quickalias.config.ConfigManager;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.ChatScreen;
 
 import java.util.*;
 
@@ -12,6 +13,11 @@ import java.util.*;
  * @author Florlet
  */
 public class InputHandler {
+    /**
+     * Execution lock to prevent duplicate command parsing/execution
+     * when simulating chat input for client-side mod compatibility.
+     */
+    public static boolean isExecutingAlias = false;
 
     /**
      * Intercepts chat input to check for alias matching.
@@ -20,6 +26,10 @@ public class InputHandler {
      * @return true if the message was handled (executed as alias), false otherwise.
      */
     public static boolean handleChatInput(String originalMessage) {
+        if (isExecutingAlias) {
+            return false;
+        }
+
         if (!originalMessage.startsWith("/")) return false;
 
         String raw = originalMessage.substring(1).trim();
@@ -97,7 +107,13 @@ public class InputHandler {
             remainingInput = String.join(" ", Arrays.copyOfRange(tokens, tokenIndex, tokens.length));
         }
 
-        executeChain(accumulatedCommands, capturedVariables, remainingInput);
+        try {
+            isExecutingAlias = true;
+            executeChain(accumulatedCommands, capturedVariables, remainingInput);
+        } finally {
+            isExecutingAlias = false;
+        }
+
         return true;
     }
 
@@ -130,11 +146,16 @@ public class InputHandler {
         }
     }
 
+    /**
+     * Execute command chain depending on config mode.
+     */
     private static void executeChain(List<String> commands, Map<String, String> variables, String remainingInput) {
         if (commands.isEmpty()) return;
 
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
+
+        boolean useVanilla = ConfigManager.getInstance().getConfig().settings.useVanillaChatInput;
 
         for (String rawCmd : commands) {
             if (rawCmd == null || rawCmd.trim().isEmpty()) continue;
@@ -149,10 +170,37 @@ public class InputHandler {
 
             if (finalCmd.isEmpty()) continue;
 
-            if (finalCmd.startsWith("/")) {
-                mc.player.connection.sendCommand(finalCmd.substring(1));
+            if (useVanilla) {
+                // Vanilla Chat Input
+                sendThroughClientChat(mc, finalCmd);
             } else {
-                mc.player.connection.sendChat(finalCmd);
+                // Direct Packet Send
+                if (finalCmd.startsWith("/")) {
+                    mc.player.connection.sendCommand(finalCmd.substring(1));
+                } else {
+                    mc.player.connection.sendChat(finalCmd);
+                }
+            }
+        }
+    }
+
+    /**
+     * Sends the final message through the client chat screen instead of directly sending packets.
+     * This allows client-side mods to inspect the input before it is submitted.
+     */
+    public static void sendThroughClientChat(Minecraft mc, String message) {
+        try {
+            ChatScreen chatScreen = new ChatScreen("", false);
+            mc.setScreen(chatScreen);
+
+            chatScreen.handleChatInput(message, true);
+
+        } catch (Throwable ignored) {
+            // Fallback to direct send if anything fails
+            if (message.startsWith("/")) {
+                mc.player.connection.sendCommand(message.substring(1));
+            } else {
+                mc.player.connection.sendChat(message);
             }
         }
     }

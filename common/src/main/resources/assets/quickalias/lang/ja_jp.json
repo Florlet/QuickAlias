@@ -23,6 +23,7 @@
     "quickalias.config.title": "グローバル設定",
     "quickalias.config.show_settings": "設定ボタン: %s",
     "quickalias.config.show_shortcut": "ショートカットボタン: %s",
+    "quickalias.config.vanilla_chat_input": "バニラのチャット処理: %s",
     "quickalias.config.button_style": "ボタンスタイル: %s",
     "quickalias.config.style.flat": "フラット",
     "quickalias.config.style.vanilla": "バニラ",

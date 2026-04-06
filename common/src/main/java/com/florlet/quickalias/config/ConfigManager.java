@@ -24,6 +24,7 @@ import java.util.List;
 public class ConfigManager {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final String FILE_NAME = "quickalias_config.json";
+    public static final String CURRENT_VERSION = "1.1";
 
     private static ConfigManager INSTANCE;
     private AliasConfig currentConfig;
@@ -68,13 +69,83 @@ public class ConfigManager {
             currentConfig = new AliasConfig();
             save();
         } else {
+            migrateIfNeeded();
             // Ensure loaded config is applied to suggestions immediately
             SuggestionManager.getInstance().update();
         }
     }
 
     /**
-     * Saves the current configuration to the disk.
+     * Handle config migration / default value injection.
+     */
+    private void migrateIfNeeded() {
+        boolean modified = false;
+
+        // Ensure settings object exists
+        if (currentConfig.settings == null) {
+            currentConfig.settings = new Settings();
+            modified = true;
+        } else {
+            // field-level migration
+            if (currentConfig.settings.showSettingsButton == null) {
+                currentConfig.settings.showSettingsButton = true;
+                modified = true;
+            }
+
+            if (currentConfig.settings.showShortcutButton == null) {
+                currentConfig.settings.showShortcutButton = true;
+                modified = true;
+            }
+
+            if (currentConfig.settings.useFlatStyle == null) {
+                currentConfig.settings.useFlatStyle = true;
+                modified = true;
+            }
+
+            if (currentConfig.settings.useVanillaChatInput == null) {
+                currentConfig.settings.useVanillaChatInput = false;
+                modified = true;
+            }
+        }
+
+        // Ensure alias list exists
+        if (currentConfig.aliases == null) {
+            currentConfig.aliases = new ArrayList<>();
+            modified = true;
+        }
+
+        // Version upgrade
+        if (currentConfig.version == null || isOlderVersion(currentConfig.version, CURRENT_VERSION)) {
+            currentConfig.version = CURRENT_VERSION;
+            modified = true;
+        }
+
+        if (modified) {
+            save();
+        }
+    }
+
+    /**
+     * Compares two version strings.
+     */
+    private boolean isOlderVersion(String oldVer, String newVer) {
+        String[] oldParts = oldVer.split("\\.");
+        String[] newParts = newVer.split("\\.");
+
+        int length = Math.max(oldParts.length, newParts.length);
+
+        for (int i = 0; i < length; i++) {
+            int oldPart = i < oldParts.length ? Integer.parseInt(oldParts[i]) : 0;
+            int newPart = i < newParts.length ? Integer.parseInt(newParts[i]) : 0;
+
+            if (oldPart < newPart) return true;
+            if (oldPart > newPart) return false;
+        }
+        return false;
+    }
+
+    /**
+     * Saves configuration to disk.
      */
     public void save() {
         if (currentConfig == null) return;
@@ -105,17 +176,18 @@ public class ConfigManager {
      * Root configuration object matching the JSON structure.
      */
     public static class AliasConfig {
-        public int version = 1;
+        public String version = CURRENT_VERSION;
         public Settings settings = new Settings();
         public List<AliasNode> aliases = new ArrayList<>();
     }
 
     /**
-     * Wrapper for global settings.
+     * Global settings wrapper.
      */
     public static class Settings {
-        public boolean showSettingsButton = true;
-        public boolean showShortcutButton = true;
-        public boolean useFlatStyle = true;
+        public Boolean showSettingsButton = true;
+        public Boolean showShortcutButton = true;
+        public Boolean useFlatStyle = true;
+        public Boolean useVanillaChatInput = false;
     }
 }

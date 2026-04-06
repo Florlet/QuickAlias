@@ -52,6 +52,24 @@ public class ModConfigScreen extends Screen {
                                                 }));
         y += 24;
 
+        // Vanilla Chat Input Toggle
+        this.addRenderableWidget(new FlatButton(centerX - 100, y, 200, 16,
+                                                Component.translatable("quickalias.config.vanilla_chat_input",
+                                                                       boolToText(Boolean.TRUE.equals(
+                                                                               config.settings.useVanillaChatInput))),
+                                                btn -> {
+                                                    boolean current = Boolean.TRUE.equals(
+                                                            config.settings.useVanillaChatInput);
+                                                    config.settings.useVanillaChatInput = !current;
+
+                                                    btn.setMessage(Component.translatable(
+                                                            "quickalias.config.vanilla_chat_input",
+                                                            boolToText(config.settings.useVanillaChatInput)));
+                                                    // Force config save to persist state immediately
+                                                    ConfigManager.getInstance().save();
+                                                }));
+        y += 24;
+
         // Button Style Toggle
         this.addRenderableWidget(new FlatButton(centerX - 100, y, 200, 16,
                                                 Component.translatable("quickalias.config.button_style",

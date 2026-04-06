@@ -23,6 +23,7 @@
     "quickalias.config.title": "Préférences Globales",
     "quickalias.config.show_settings": "Bouton Paramètres : %s",
     "quickalias.config.show_shortcut": "Bouton Raccourci : %s",
+    "quickalias.config.vanilla_chat_input": "Traitement du chat vanilla : %s",
     "quickalias.config.button_style": "Style de bouton : %s",
     "quickalias.config.style.flat": "Plat",
     "quickalias.config.style.vanilla": "Vanilla",

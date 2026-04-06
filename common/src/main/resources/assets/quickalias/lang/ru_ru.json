@@ -23,6 +23,7 @@
     "quickalias.config.title": "Глобальные настройки",
     "quickalias.config.show_settings": "Кнопка настроек: %s",
     "quickalias.config.show_shortcut": "Кнопка быстрого меню: %s",
+    "quickalias.config.vanilla_chat_input": "Обработка чата ваниллы: %s",
     "quickalias.config.button_style": "Стиль кнопок: %s",
     "quickalias.config.style.flat": "Плоский",
     "quickalias.config.style.vanilla": "Ванильный",
