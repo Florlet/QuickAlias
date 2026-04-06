@@ -1,7 +1,7 @@
 package com.florlet.quickalias.gui;
 
 import com.florlet.quickalias.config.ConfigManager;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
@@ -37,7 +37,6 @@ public class ModConfigScreen extends Screen {
                                                                                    boolToText(
                                                                                            config.settings.showSettingsButton)));
                                                 }));
-
         y += 24;
 
         // Shortcut Button Toggle
@@ -51,7 +50,6 @@ public class ModConfigScreen extends Screen {
                                                                                    boolToText(
                                                                                            config.settings.showShortcutButton)));
                                                 }));
-
         y += 24;
 
         // Button Style Toggle
@@ -68,7 +66,6 @@ public class ModConfigScreen extends Screen {
                                                     // Force config save to persist state immediately
                                                     ConfigManager.getInstance().save();
                                                 }));
-
         y += 24;
 
         this.addRenderableWidget(
@@ -89,9 +86,16 @@ public class ModConfigScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 20, 0xFFFFFF);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY,
+                                   float partialTick) {
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
+
+        guiGraphics.centeredText(this.font, this.title, this.width / 2, 20, 0xFFFFFFFF);
+    }
+
+    @Override
+    public void onClose() {
+        ConfigManager.getInstance().save();
+        this.minecraft.setScreen(parent);
     }
 }

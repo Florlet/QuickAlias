@@ -2,7 +2,7 @@ package com.florlet.quickalias.gui;
 
 import com.florlet.quickalias.config.AliasNode;
 import com.florlet.quickalias.config.ConfigManager;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -43,7 +43,7 @@ public class SettingsScreen extends Screen {
         this.addRenderableWidget(this.searchBox);
 
         // Add Root Node Button [+]
-        this.addRenderableWidget(new FlatButton(this.width - 30, 28, 16, 16, Component.literal("+"), 0, -1, (btn) -> {
+        this.addRenderableWidget(new FlatButton(this.width - 30, 28, 16, 16, Component.literal("+"), 0, 1, (btn) -> {
             AliasNode newNode = new AliasNode();
             this.minecraft.setScreen(new AliasEditorScreen(this, newNode, true));
         }));
@@ -75,18 +75,17 @@ public class SettingsScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-        this.renderMenuBackground(guiGraphics);
-        this.aliasList.render(guiGraphics, mouseX, mouseY, partialTick);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY,
+                                   float partialTick) {
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
 
-        // Center Title
-        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 10, 0xFFFFFF);
+        guiGraphics.centeredText(this.font, this.title, this.width / 2, 10, 0xFFFFFFFF);
 
-        // Author label slight offset
-        guiGraphics.drawString(this.font, "By Florlet", 10, 10, 0x555555);
+        guiGraphics.text(this.font, "By Florlet", 10, 10, 0xFF555555);
 
-        searchBox.render(guiGraphics, mouseX, mouseY, partialTick);
+        if (this.searchBox != null) {
+            this.searchBox.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
+        }
     }
 
     @Override

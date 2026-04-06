@@ -7,11 +7,13 @@ import com.florlet.quickalias.gui.FlatButton;
 import com.florlet.quickalias.gui.SettingsScreen;
 import com.florlet.quickalias.gui.ShortcutOverlay;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.ChatScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,7 +31,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  */
 @Mixin (ChatScreen.class)
 public class ChatScreenMixin extends Screen {
-
     @Unique
     private ShortcutOverlay quickAlias$shortcutOverlay;
     @Unique
@@ -46,7 +47,7 @@ public class ChatScreenMixin extends Screen {
         super(title);
     }
 
-    @Inject (method = "init", at = @At ("RETURN"))
+    @Inject (method = "init", at = @At ("RETURN"), remap = false)
     private void onInit(CallbackInfo ci) {
         // Ensure suggestions are updated/registered when ChatScreen opens.
         SuggestionManager.getInstance().update();
@@ -116,8 +117,8 @@ public class ChatScreenMixin extends Screen {
     /**
      * Redirects the background fill render call to adjust the chat bar size.
      */
-    @Redirect (method = "render", at = @At (value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;fill(IIIII)V"))
-    private void quickalias$redirectChatBackgroundFill(GuiGraphics guiGraphics, int x1, int y1, int x2, int y2,
+    @Redirect (method = "extractRenderState", at = @At (value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;fill(IIIII)V"), remap = false)
+    private void quickalias$redirectChatBackgroundFill(GuiGraphicsExtractor guiGraphics, int x1, int y1, int x2, int y2,
                                                        int color) {
         int modifiedX1 = x1;
         int modifiedY1 = y1;
@@ -133,8 +134,9 @@ public class ChatScreenMixin extends Screen {
         guiGraphics.fill(modifiedX1, modifiedY1, x2, y2, color);
     }
 
-    @Inject (method = "render", at = @At ("TAIL"))
-    private void onRender(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
+    @Inject (method = "extractRenderState", at = @At ("TAIL"), remap = false)
+    private void onExtractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick,
+                                      CallbackInfo ci) {
         if (this.quickAlias$shortcutOverlay != null && this.quickAlias$shortcutOverlay.isVisible()) {
             int anchorX = (this.quickAlias$qaShortcutButton != null) ? this.quickAlias$qaShortcutButton.getX() : 0;
             int anchorY =
@@ -146,20 +148,17 @@ public class ChatScreenMixin extends Screen {
             double rawMouseY = mc.mouseHandler.ypos() * (double) mc.getWindow()
                     .getGuiScaledHeight() / (double) mc.getWindow().getScreenHeight();
 
-            // Elevate Z-Index to 500 to render ABOVE vanilla suggestions
-            guiGraphics.pose().pushPose();
-            guiGraphics.pose().translate(0.0f, 0.0f, 500.0f);
-
-            this.quickAlias$shortcutOverlay.render(guiGraphics, (int) rawMouseX, (int) rawMouseY, anchorX, anchorY);
-
-            guiGraphics.pose().popPose();
+            guiGraphics.pose().pushMatrix();
+            this.quickAlias$shortcutOverlay.extractRenderState(guiGraphics, (int) rawMouseX, (int) rawMouseY, anchorX,
+                                                               anchorY);
+            guiGraphics.pose().popMatrix();
         }
     }
 
-    @Inject (method = "mouseClicked", at = @At ("HEAD"), cancellable = true)
-    private void onMouseClicked(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
+    @Inject (method = "mouseClicked", at = @At ("HEAD"), cancellable = true, remap = false)
+    private void onMouseClicked(MouseButtonEvent event, boolean handled, CallbackInfoReturnable<Boolean> cir) {
         if (this.quickAlias$shortcutOverlay != null && this.quickAlias$shortcutOverlay.isVisible()) {
-            if (this.quickAlias$shortcutOverlay.mouseClicked(mouseX, mouseY, button)) {
+            if (this.quickAlias$shortcutOverlay.mouseClicked(event, handled)) {
                 EditBox input = ((ChatScreenAccessor) this).getInput();
                 if (input != null) this.setFocused(input);
                 cir.setReturnValue(true);
@@ -170,20 +169,20 @@ public class ChatScreenMixin extends Screen {
         }
     }
 
-    @Inject (method = "mouseScrolled", at = @At ("HEAD"), cancellable = true)
-    private void onMouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY,
+    @Inject (method = "mouseScrolled", at = @At ("HEAD"), cancellable = true, remap = false)
+    private void onMouseScrolled(double mouseX, double mouseY, double horizontalDelta, double verticalDelta,
                                  CallbackInfoReturnable<Boolean> cir) {
         if (this.quickAlias$shortcutOverlay != null && this.quickAlias$shortcutOverlay.isVisible()) {
-            if (this.quickAlias$shortcutOverlay.mouseScrolled(mouseX, mouseY, scrollX, scrollY)) {
+            if (this.quickAlias$shortcutOverlay.mouseScrolled(mouseX, mouseY, verticalDelta)) {
                 cir.setReturnValue(true);
             }
         }
     }
 
-    @Inject (method = "keyPressed", at = @At ("HEAD"), cancellable = true)
-    private void onKeyPressed(int keyCode, int scanCode, int modifiers, CallbackInfoReturnable<Boolean> cir) {
+    @Inject (method = "keyPressed", at = @At ("HEAD"), cancellable = true, remap = false)
+    private void onKeyPressed(KeyEvent event, CallbackInfoReturnable<Boolean> cir) {
         if (this.quickAlias$shortcutOverlay != null && this.quickAlias$shortcutOverlay.isVisible()) {
-            if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
                 this.quickAlias$shortcutOverlay.toggle();
                 EditBox input = ((ChatScreenAccessor) this).getInput();
                 if (input != null) this.setFocused(input);
@@ -194,7 +193,7 @@ public class ChatScreenMixin extends Screen {
         }
     }
 
-    @Inject (method = "handleChatInput", at = @At ("HEAD"), cancellable = true)
+    @Inject (method = "handleChatInput", at = @At ("HEAD"), cancellable = true, remap = false)
     private void onHandleChatInput(String message, boolean addToHistory, CallbackInfo ci) {
         if (InputHandler.handleChatInput(message)) {
             ci.cancel();

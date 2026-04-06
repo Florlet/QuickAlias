@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 @Mod (QuickAliasClient.MOD_ID)
 public class QuickAliasNeoForge {
     public QuickAliasNeoForge() {
-        if (FMLEnvironment.dist == Dist.CLIENT) {
+        if (FMLEnvironment.getDist() == Dist.CLIENT) {
             QuickAliasClient.init();
 
             ModLoadingContext.get()

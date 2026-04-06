@@ -6,6 +6,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin (AbstractWidget.class)
 public interface EditBoxAccessor {
-    @Accessor ("height")
+    @Accessor (value = "height", remap = false)
     void setHeight(int height);
 }

@@ -4,9 +4,10 @@ import com.florlet.quickalias.QuickAliasLogger;
 import com.florlet.quickalias.config.AliasNode;
 import com.florlet.quickalias.config.ConfigManager;
 import com.google.gson.Gson;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import org.jetbrains.annotations.NotNull;
@@ -36,7 +37,7 @@ public class ImportConfigScreen extends Screen {
     private ConfigManager.AliasConfig importedConfig;
 
     private Component statusMessage;
-    private int statusColor = 0xFFFFFF;
+    private int statusColor = 0xFFFFFFFF;
     private boolean isPreviewVisible = false;
 
     // Confirmation State
@@ -83,9 +84,11 @@ public class ImportConfigScreen extends Screen {
         this.replaceBtn = new FlatButton(startX, bottomY, btnWidth, 16,
                                          Component.translatable("quickalias.import.mode.replace"),
                                          btn -> triggerConfirmation(0));
+
         this.overwriteBtn = new FlatButton(startX + btnWidth + gap, bottomY, btnWidth, 16,
                                            Component.translatable("quickalias.import.mode.merge_overwrite"),
                                            btn -> triggerConfirmation(2));
+
         this.skipBtn = new FlatButton(startX + (btnWidth + gap) * 2, bottomY, btnWidth, 16,
                                       Component.translatable("quickalias.import.mode.merge_skip"),
                                       btn -> triggerConfirmation(1));
@@ -110,6 +113,7 @@ public class ImportConfigScreen extends Screen {
                                              executeImport(pendingImportMode);
                                              showConfirmation = false;
                                          });
+
         this.cancelConfirmBtn = new FlatButton(centerX + 5, centerY + 10, 100, 20, Component.translatable("gui.cancel"),
                                                btn -> {
                                                    showConfirmation = false;
@@ -162,7 +166,7 @@ public class ImportConfigScreen extends Screen {
         } catch (Exception e) {
             QuickAliasLogger.error("Failed to load file", e);
             this.statusMessage = Component.translatable("quickalias.import.error.io_error");
-            this.statusColor = 0xFF5555;
+            this.statusColor = 0xFFFF5555;
             this.isPreviewVisible = false;
             this.rebuildWidgets();
         }
@@ -173,11 +177,11 @@ public class ImportConfigScreen extends Screen {
 
         if (loaded == null || loaded.aliases == null) {
             this.statusMessage = Component.translatable("quickalias.import.error.invalid_json");
-            this.statusColor = 0xFF5555;
+            this.statusColor = 0xFFFF5555;
             this.isPreviewVisible = false;
         } else if (loaded.aliases.isEmpty()) {
             this.statusMessage = Component.translatable("quickalias.import.status.valid_zero");
-            this.statusColor = 0xFFFF55;
+            this.statusColor = 0xFFFFFF55;
             this.isPreviewVisible = false;
         } else {
             this.statusMessage = Component.empty();
@@ -227,13 +231,12 @@ public class ImportConfigScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(@NotNull MouseButtonEvent event, boolean handled) {
         if (showConfirmation) {
-            if (confirmBtn.mouseClicked(mouseX, mouseY, button)) return true;
-            if (cancelConfirmBtn.mouseClicked(mouseX, mouseY, button)) return true;
+            if (confirmBtn.mouseClicked(event, handled) || cancelConfirmBtn.mouseClicked(event, handled)) return true;
             return true; // Consume all clicks to block underlying widgets
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(event, handled);
     }
 
     private Component getModeComponent(int mode) {
@@ -246,26 +249,23 @@ public class ImportConfigScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY,
+                                   float partialTick) {
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
 
         if (isPreviewVisible) {
-            this.renderMenuBackground(guiGraphics);
-            this.previewList.render(guiGraphics, mouseX, mouseY, partialTick);
+            if (this.previewList != null) {
+                this.previewList.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
+            }
         } else {
-            guiGraphics.drawCenteredString(this.font, this.statusMessage, this.width / 2, this.height / 2,
-                                           this.statusColor);
+            guiGraphics.centeredText(this.font, this.statusMessage, this.width / 2, this.height / 2, this.statusColor);
         }
 
-        guiGraphics.drawCenteredString(this.font, this.title, this.width / 2, 15, 0xFFFFFF);
+        guiGraphics.centeredText(this.font, this.title, this.width / 2, 15, 0xFFFFFFFF);
 
         // Render Confirmation Overlay
         if (showConfirmation) {
-            // Push pose and translate Z to ensure overlay is on top of everything
-            guiGraphics.pose().pushPose();
-            guiGraphics.pose().translate(0.0f, 0.0f, 500.0f);
-
+            guiGraphics.pose().pushMatrix();
             guiGraphics.fill(0, 0, this.width, this.height, 0x80000000); // Dark overlay
 
             int centerX = this.width / 2;
@@ -281,8 +281,8 @@ public class ImportConfigScreen extends Screen {
             guiGraphics.fill(boxX, boxY, boxX + 1, boxY + boxH, 0xFFFFFFFF); // Left border
             guiGraphics.fill(boxX + boxW - 1, boxY, boxX + boxW, boxY + boxH, 0xFFFFFFFF); // Right border
 
-            guiGraphics.drawCenteredString(this.font, Component.translatable("quickalias.import.confirm.title"),
-                                           centerX, boxY + 10, 0xFFFFFF);
+            guiGraphics.centeredText(this.font, Component.translatable("quickalias.import.confirm.title"), centerX,
+                                     boxY + 10, 0xFFFFFFFF);
 
             Component modeText = getModeComponent(pendingImportMode);
 
@@ -291,12 +291,24 @@ public class ImportConfigScreen extends Screen {
 
             int textY = boxY + 23;
             for (FormattedCharSequence line : confirmLines) {
-                guiGraphics.drawCenteredString(this.font, line, centerX, textY, 0xAAAAAA);
+                guiGraphics.centeredText(this.font, line, centerX, textY, 0xFFAAAAAA);
                 textY += 12;
             }
 
-            confirmBtn.render(guiGraphics, mouseX, mouseY, partialTick);
-            cancelConfirmBtn.render(guiGraphics, mouseX, mouseY, partialTick);
+            confirmBtn.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
+            cancelConfirmBtn.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
+
+            guiGraphics.pose().popMatrix();
         }
+    }
+
+    @Override
+    public void onClose() {
+        this.minecraft.setScreen(parent);
+    }
+
+    protected void rebuildWidgets() {
+        clearWidgets();
+        init();
     }
 }

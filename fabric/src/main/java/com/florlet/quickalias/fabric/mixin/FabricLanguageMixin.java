@@ -5,15 +5,13 @@ import com.florlet.quickalias.QuickAliasLogger;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.llamalad7.mixinextras.sugar.Local;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.resources.language.ClientLanguage;
 import net.minecraft.server.packs.resources.ResourceManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,44 +30,52 @@ public class FabricLanguageMixin {
     private static final Gson quickalias$GSON = new Gson();
 
     /**
-     * Intercepts the end of the {@link ClientLanguage#loadFrom} method (before the ImmutableMap is created).
+     * Intercepts the language map during the {@link ClientLanguage#loadFrom} method execution.
      * <p>
-     * Captures the local variable map being built and manually injects the content of the mod's internal language files into it.
+     * Captures the mutable map before it becomes immutable and injects QuickAlias translations.
      *
-     * @param resourceManager The resource manager
-     * @param definitions     List of currently enabled languages (e.g., ["en_us", "zh_cn"])
-     * @param p_265725_       Obfuscated boolean parameter
-     * @param cir             Callback info
      * @param map             Local variable capture: The language key-value Map currently being built
+     * @param resourceManager The resource manager (unused, but required for signature matching)
+     * @param definitions     List of currently enabled languages (e.g., ["en_us", "zh_cn"])
+     * @param p_265725_       Obfuscated boolean parameter (right-to-left flag)
+     * @return The modified language map with QuickAlias translations injected
      */
-    @Inject (method = "loadFrom", at = @At (value = "INVOKE", target = "Lcom/google/common/collect/ImmutableMap;copyOf(Ljava/util/Map;)Lcom/google/common/collect/ImmutableMap;", remap = false))
-    private static void quickalias$injectMissingTranslations(ResourceManager resourceManager, List<String> definitions,
-                                                             boolean p_265725_,
-                                                             CallbackInfoReturnable<ClientLanguage> cir,
-                                                             @Local Map<String, String> map) {
-        // Check if Fabric API is installed
-        if (FabricLoader.getInstance().isModLoaded("fabric-api")) {
-            return;
+    @ModifyVariable (method = "loadFrom", at = @At (value = "STORE", ordinal = 0), ordinal = 0)
+    private static Map<String, String> quickalias$injectMissingTranslations(Map<String, String> map,
+                                                                            ResourceManager resourceManager,
+                                                                            List<String> definitions,
+                                                                            boolean p_265725_) {
+
+        // Check if Fabric API is installed; if yes, skip manual injection
+        if (FabricLoader.getInstance().isModLoaded("fabric-api") || FabricLoader.getInstance()
+                .isModLoaded("fabric-language-api-v1")) {
+            return map;
         }
 
         // If Fabric API is not installed, start manual injection process
+        QuickAliasLogger.info("Fabric API not detected, manually injecting QuickAlias language files...");
+
         for (String langCode : definitions) {
             String path = String.format("/assets/%s/lang/%s.json", QuickAliasClient.MOD_ID, langCode);
 
             // Try to read the language file directly from the mod Jar's classpath
             try (InputStream stream = FabricLanguageMixin.class.getResourceAsStream(path)) {
-                if (stream != null) {
-                    QuickAliasLogger.info("Manually injecting language file: " + path);
+                if (stream == null) {
+                    continue;
+                }
 
-                    try (InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
-                        JsonObject json = quickalias$GSON.fromJson(reader, JsonObject.class);
+                QuickAliasLogger.info("Manually injecting language file: " + path);
 
-                        // Put key-value pairs from JSON into the game's language Map one by one
+                try (InputStreamReader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+                    JsonObject json = quickalias$GSON.fromJson(reader, JsonObject.class);
+
+                    // Put key-value pairs from JSON into the game's language Map one by one
+                    if (json != null) {
                         for (Map.Entry<String, JsonElement> entry : json.entrySet()) {
                             String key = entry.getKey();
                             String value = entry.getValue().getAsString();
 
-                            // Use 'put' to simulate vanilla loading behavior
+                            // Use 'put' instead of 'putIfAbsent' to ensure our translations take precedence
                             map.put(key, value);
                         }
                     }
@@ -78,5 +84,7 @@ public class FabricLanguageMixin {
                 QuickAliasLogger.error("Failed to inject language file: " + path + "\n" + e);
             }
         }
+
+        return map;
     }
 }

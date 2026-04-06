@@ -105,10 +105,10 @@ public class VariableResolver {
             case "Z":
                 return player != null ? String.format("%.1f", player.getZ()) : "{Z}";
             case "ID":
-                return player != null ? player.getGameProfile().getName() : "{ID}";
+                return player != null ? player.getGameProfile().name() : "{ID}";
             case "DIM":
                 if (player != null) {
-                    return player.level().dimension().location().toString();
+                    return player.level().dimension().registry().toString();
                 }
                 return "{DIM}";
         }

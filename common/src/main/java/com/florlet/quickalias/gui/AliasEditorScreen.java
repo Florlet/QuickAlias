@@ -2,7 +2,7 @@ package com.florlet.quickalias.gui;
 
 import com.florlet.quickalias.config.AliasNode;
 import com.florlet.quickalias.config.ConfigManager;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
@@ -136,7 +136,6 @@ public class AliasEditorScreen extends Screen {
                                       Component.translatable("quickalias.editor.alias_name"));
         this.aliasInput.setMaxLength(32);
         this.aliasInput.setValue(workingNode.getName());
-        this.aliasInput.setFilter(s -> !s.contains(" "));
 
         // Color logic for Alias Input
         updateNameInputColor();
@@ -147,6 +146,22 @@ public class AliasEditorScreen extends Screen {
         }
 
         this.aliasInput.setResponder(val -> {
+            // No spaces are allowed in aliases
+            if (val.contains(" ")) {
+                String filtered = val.replace(" ", "");
+                int cursorPos = this.aliasInput.getCursorPosition();
+
+                // Calculate cursor position
+                int spacesBeforeCursor = 0;
+                if (cursorPos <= val.length()) {
+                    spacesBeforeCursor = val.substring(0, cursorPos).length() - val.substring(0, cursorPos)
+                            .replace(" ", "").length();
+                }
+
+                this.aliasInput.setValue(filtered);
+                // Restore cursor position
+                this.aliasInput.setCursorPosition(Math.max(0, cursorPos - spacesBeforeCursor));
+            }
             workingNode.setName(val);
             updateNameInputColor();
             validate();
@@ -172,11 +187,11 @@ public class AliasEditorScreen extends Screen {
 
     private void updateNameInputColor() {
         if (workingNode.isEndNode()) {
-            this.aliasInput.setTextColor(0xAA55FF); // END Purple
+            this.aliasInput.setTextColor(0xFFAA55FF); // END Purple
         } else if (workingNode.isVariable()) {
-            this.aliasInput.setTextColor(0xFFAA00); // Variable Orange
+            this.aliasInput.setTextColor(0xFFFFAA00); // Variable Orange
         } else {
-            this.aliasInput.setTextColor(0xFFFFFF);
+            this.aliasInput.setTextColor(0xFFFFFFFF);
         }
     }
 
@@ -263,7 +278,7 @@ public class AliasEditorScreen extends Screen {
             cmdBox.visible = isVisible;
 
             // Command Input text always White
-            cmdBox.setTextColor(0xFFFFFF);
+            cmdBox.setTextColor(0xFFFFFFFF);
 
             int idx = i;
             cmdBox.setResponder(val -> {
@@ -272,13 +287,13 @@ public class AliasEditorScreen extends Screen {
                     validate();
                 }
             });
-            this.addWidget(cmdBox);
+            this.addRenderableWidget(cmdBox);
             this.commandWidgets.add(cmdBox);
 
             boolean isLastOne = workingNode.getCommands().size() == 1;
 
             FlatButton delBtn = new FlatButton(centerX + 105, itemY + 2, BUTTON_SIZE, BUTTON_SIZE,
-                                               Component.literal("×").withStyle(s -> s.withColor(0xFF5555)), 0, -1,
+                                               Component.literal("×").withStyle(s -> s.withColor(0xFFFF5555)), 0, 1,
                                                btn -> {
                                                    if (isLastOne && hasChildren) {
                                                        workingNode.getCommands().set(0, "");
@@ -294,7 +309,7 @@ public class AliasEditorScreen extends Screen {
                                                    }
                                                });
             delBtn.visible = isVisible;
-            this.addWidget(delBtn);
+            this.addRenderableWidget(delBtn);
             this.commandWidgets.add(delBtn);
         }
 
@@ -309,7 +324,7 @@ public class AliasEditorScreen extends Screen {
                 rebuildInterface();
             });
             addBtn.visible = isVisible;
-            this.addWidget(addBtn);
+            this.addRenderableWidget(addBtn);
             this.commandWidgets.add(addBtn);
         }
     }
@@ -322,14 +337,14 @@ public class AliasEditorScreen extends Screen {
         while (m.find()) {
             if (m.start() > lastEnd) {
                 root.append(Component.literal(cmd.substring(lastEnd, m.start()))
-                                    .withStyle(Style.EMPTY.withColor(0xFFFFFF)));
+                                    .withStyle(Style.EMPTY.withColor(0xFFFFFFFF)));
             }
-            root.append(Component.literal(m.group()).withStyle(Style.EMPTY.withColor(0xFFAA00)));
+            root.append(Component.literal(m.group()).withStyle(Style.EMPTY.withColor(0xFFFFAA00)));
             lastEnd = m.end();
         }
 
         if (lastEnd < cmd.length()) {
-            root.append(Component.literal(cmd.substring(lastEnd)).withStyle(Style.EMPTY.withColor(0xFFFFFF)));
+            root.append(Component.literal(cmd.substring(lastEnd)).withStyle(Style.EMPTY.withColor(0xFFFFFFFF)));
         }
 
         return root;
@@ -354,37 +369,38 @@ public class AliasEditorScreen extends Screen {
             AliasNode child = workingNode.getChildren().get(i);
 
             String rawLabel = child.getName() + " -> " + (child.getCommands().isEmpty() ? "..."
-                    : child.getCommands().get(0));
+                    : child.getCommands().getFirst());
 
             String childName = child.getName();
-            String childCmd = child.getCommands().isEmpty() ? "..." : child.getCommands().get(0);
+            String childCmd = child.getCommands().isEmpty() ? "..." : child.getCommands().getFirst();
 
             // Determine Name Color
-            int nameColor = 0xFFFFFF;
-            if (child.isVariable()) nameColor = 0xFFAA00;
-            if (child.isEndNode()) nameColor = 0xAA55FF;
+            int nameColor = 0xFFFFFFFF;
+            if (child.isVariable()) nameColor = 0xFFFFAA00;
+            if (child.isEndNode()) nameColor = 0xFFAA55FF;
 
             // Determine Command Component
             Component cmdComponent = formatCommandWithVariables(childCmd);
 
             MutableComponent buttonLabel = Component.literal(childName).withStyle(Style.EMPTY.withColor(nameColor))
-                    .append(Component.literal(" -> ").withStyle(Style.EMPTY.withColor(0x888888))).append(cmdComponent);
+                    .append(Component.literal(" -> ").withStyle(Style.EMPTY.withColor(0xFF888888)))
+                    .append(cmdComponent);
 
             FlatButton childBtn = new FlatButton(centerX - 100, itemY + 2, 200, INPUT_HEIGHT, buttonLabel,
                                                  btn -> this.minecraft.setScreen(
                                                          new AliasEditorScreen(this, child, false)));
             childBtn.visible = isVisible;
-            this.addWidget(childBtn);
+            this.addRenderableWidget(childBtn);
             this.childWidgets.add(childBtn);
 
             FlatButton delBtn = new FlatButton(centerX + 105, itemY + 2, BUTTON_SIZE, BUTTON_SIZE,
-                                               Component.literal("×").withStyle(s -> s.withColor(0xFF5555)), 0, -1,
+                                               Component.literal("×").withStyle(s -> s.withColor(0xFFFF5555)), 0, 1,
                                                btn -> {
                                                    workingNode.getChildren().remove(child);
                                                    rebuildInterface();
                                                });
             delBtn.visible = isVisible;
-            this.addWidget(delBtn);
+            this.addRenderableWidget(delBtn);
             this.childWidgets.add(delBtn);
         }
 
@@ -396,7 +412,7 @@ public class AliasEditorScreen extends Screen {
             // Only show + END button if {END} does not exist yet.
             if (!hasEndNode) {
                 Component endLabel = Component.literal("+ ")
-                        .append(Component.literal("END").withStyle(Style.EMPTY.withColor(0xAA55FF)));
+                        .append(Component.literal("END").withStyle(Style.EMPTY.withColor(0xFFAA55FF)));
 
                 this.addEndNodeBtn = new FlatButton(centerX - 100, addButtonY + 2, 200, 16, endLabel, btn -> {
                     AliasNode newChild = new AliasNode("{END}");
@@ -404,7 +420,7 @@ public class AliasEditorScreen extends Screen {
                     this.minecraft.setScreen(new AliasEditorScreen(this, newChild, true));
                 });
                 this.addEndNodeBtn.visible = isVisible;
-                this.addWidget(addEndNodeBtn);
+                this.addRenderableWidget(addEndNodeBtn);
                 this.childWidgets.add(addEndNodeBtn);
             }
         } else {
@@ -416,7 +432,7 @@ public class AliasEditorScreen extends Screen {
                 this.minecraft.setScreen(new AliasEditorScreen(this, newChild, true));
             });
             this.addSubChildBtn.visible = isVisible;
-            this.addWidget(addSubChildBtn);
+            this.addRenderableWidget(addSubChildBtn);
             this.childWidgets.add(addSubChildBtn);
         }
     }
@@ -439,11 +455,7 @@ public class AliasEditorScreen extends Screen {
 
         // Root Node Checks
         if (valid && isRootNode()) {
-            if (isVariable(name)) {
-                errorMessage = Component.translatable("quickalias.editor.error.root_variable");
-                valid = false;
-            }
-            if ("{END}".equals(name)) {
+            if (isVariable(name) || "{END}".equals(name)) {
                 errorMessage = Component.translatable("quickalias.editor.error.root_variable");
                 valid = false;
             }
@@ -619,14 +631,15 @@ public class AliasEditorScreen extends Screen {
     }
 
     @Override
-    public void render(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics, mouseX, mouseY, partialTick);
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
+    public void extractRenderState(@NotNull GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY,
+                                   float partialTick) {
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
+
         for (BreadcrumbSeparator sep : breadcrumbSeparators)
-            guiGraphics.drawString(this.font, sep.text, sep.x, sep.y, 0xAAAAAA);
+            guiGraphics.text(this.font, sep.text, sep.x, sep.y, 0xFFAAAAAA);
 
         guiGraphics.enableScissor(0, cmdAreaTop, this.width, cmdAreaBottom);
-        for (AbstractWidget widget : this.commandWidgets) widget.render(guiGraphics, mouseX, mouseY, partialTick);
+        for (AbstractWidget widget : this.commandWidgets) widget.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
         guiGraphics.disableScissor();
 
         // Only render children area if we are not in Macro Mode and not an END node
@@ -635,7 +648,7 @@ public class AliasEditorScreen extends Screen {
 
         if (!isMacroMode && !isEndNode) {
             guiGraphics.enableScissor(0, childAreaTop, this.width, childAreaBottom);
-            for (AbstractWidget widget : this.childWidgets) widget.render(guiGraphics, mouseX, mouseY, partialTick);
+            for (AbstractWidget widget : this.childWidgets) widget.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
             guiGraphics.disableScissor();
         }
 
@@ -647,31 +660,31 @@ public class AliasEditorScreen extends Screen {
 
         // Render Slash for Root Node
         if (isRootNode()) {
-            guiGraphics.pose().pushPose();
+            guiGraphics.pose().pushMatrix();
             float scale = 1.5f;
-            guiGraphics.pose().translate(labelAnchorX + 4, aliasInput.getY() + 2, 0);
-            guiGraphics.pose().scale(scale, scale, 1.0f);
-            guiGraphics.drawString(this.font, "/", 2, 0, 0xAAAAAA);
-            guiGraphics.pose().popPose();
+            guiGraphics.pose().translate(labelAnchorX + 4, aliasInput.getY() + 2);
+            guiGraphics.pose().scale(scale, scale);
+            guiGraphics.text(this.font, "/", 1, 0, 0xFFAAAAAA);
+            guiGraphics.pose().popMatrix();
         }
 
         // Draw Labels Right-Aligned to labelAnchorX
         Component aliasLabel = Component.translatable("quickalias.editor.label.alias");
-        guiGraphics.drawString(this.font, aliasLabel, labelAnchorX - this.font.width(aliasLabel), aliasInput.getY() + 4,
-                               0xAAAAAA);
+        guiGraphics.text(this.font, aliasLabel, labelAnchorX - this.font.width(aliasLabel), aliasInput.getY() + 4,
+                         0xFFAAAAAA);
 
         Component cmdLabel = Component.translatable("quickalias.editor.label.cmd");
-        guiGraphics.drawString(this.font, cmdLabel, labelAnchorX - this.font.width(cmdLabel), cmdAreaTop + 4, 0xAAAAAA);
+        guiGraphics.text(this.font, cmdLabel, labelAnchorX - this.font.width(cmdLabel), cmdAreaTop + 4, 0xFFAAAAAA);
 
         if (!isMacroMode && !isEndNode) {
             Component subLabel = Component.translatable("quickalias.editor.label.sub_options");
-            guiGraphics.drawString(this.font, subLabel, labelAnchorX - this.font.width(subLabel), childAreaTop + 4,
-                                   0xAAAAAA);
+            guiGraphics.text(this.font, subLabel, labelAnchorX - this.font.width(subLabel), childAreaTop + 4,
+                             0xFFAAAAAA);
         }
 
         if (errorMessage != null) {
             int errorY = aliasInput.getY() + INPUT_HEIGHT + 6;
-            guiGraphics.drawString(this.font, errorMessage, centerX - 100, errorY, 0xFF5555);
+            guiGraphics.text(this.font, errorMessage, centerX - 100, errorY, 0xFFFF5555);
         }
     }
 

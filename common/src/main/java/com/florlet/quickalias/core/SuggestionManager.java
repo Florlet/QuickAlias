@@ -12,11 +12,11 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientSuggestionProvider;
 import net.minecraft.client.multiplayer.PlayerInfo;
-import net.minecraft.commands.SharedSuggestionProvider;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.commands.arguments.IdentifierArgument;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 
 import java.lang.reflect.Field;
@@ -49,7 +49,7 @@ public class SuggestionManager {
         }
     }
 
-    private CommandDispatcher<SharedSuggestionProvider> dispatcher;
+    private CommandDispatcher<ClientSuggestionProvider> dispatcher;
     private List<AliasNode> registeredAliases = new ArrayList<>();
 
     private SuggestionManager() {
@@ -61,7 +61,7 @@ public class SuggestionManager {
 
     @SuppressWarnings ("unchecked")
     public void init(CommandDispatcher<?> dispatcher) {
-        this.dispatcher = (CommandDispatcher<SharedSuggestionProvider>) dispatcher;
+        this.dispatcher = (CommandDispatcher<ClientSuggestionProvider>) dispatcher;
         this.update();
     }
 
@@ -98,7 +98,7 @@ public class SuggestionManager {
         }
     }
 
-    private void registerNode(AliasNode aliasNode, CommandNode<SharedSuggestionProvider> parent) {
+    private void registerNode(AliasNode aliasNode, CommandNode<ClientSuggestionProvider> parent) {
         // Skip {END} nodes for auto-completion
         if (aliasNode.isEndNode()) return;
 
@@ -108,34 +108,34 @@ public class SuggestionManager {
         boolean isVariable = aliasNode.isVariable();
         String nodeName = isVariable ? aliasNode.getVariableName() : name;
 
-        ArgumentBuilder<SharedSuggestionProvider, ?> builder;
+        ArgumentBuilder<ClientSuggestionProvider, ?> builder;
 
         if (isVariable) {
             // Variable Logic - Case Sensitive Matching
             if ("id".equals(nodeName)) {
                 // Player Name Completion
-                builder = RequiredArgumentBuilder.<SharedSuggestionProvider, String>argument(nodeName,
+                builder = RequiredArgumentBuilder.<ClientSuggestionProvider, String>argument(nodeName,
                                                                                              StringArgumentType.word())
                         .suggests((context, suggestionsBuilder) -> {
                             Minecraft mc = Minecraft.getInstance();
                             if (mc.getConnection() != null) {
                                 Collection<PlayerInfo> players = mc.getConnection().getOnlinePlayers();
                                 for (PlayerInfo info : players) {
-                                    suggestionsBuilder.suggest(info.getProfile().getName());
+                                    suggestionsBuilder.suggest(info.getProfile().name());
                                 }
                             }
                             return suggestionsBuilder.buildFuture();
                         });
             } else if ("dim".equals(nodeName)) {
                 // Dimension ID Completion
-                builder = RequiredArgumentBuilder.<SharedSuggestionProvider, ResourceLocation>argument(nodeName,
-                                                                                                       ResourceLocationArgument.id())
+                builder = RequiredArgumentBuilder.<ClientSuggestionProvider, Identifier>argument(nodeName,
+                                                                                                 IdentifierArgument.id())
                         .suggests((context, suggestionsBuilder) -> {
                             Minecraft mc = Minecraft.getInstance();
                             if (mc.getConnection() != null) {
                                 Set<ResourceKey<Level>> levels = mc.getConnection().levels();
                                 for (ResourceKey<Level> levelKey : levels) {
-                                    suggestionsBuilder.suggest(levelKey.location().toString());
+                                    suggestionsBuilder.suggest(levelKey.registry().toString());
                                 }
                             }
                             return suggestionsBuilder.buildFuture();
@@ -153,10 +153,10 @@ public class SuggestionManager {
             builder.executes(context -> Command.SINGLE_SUCCESS);
         }
 
-        CommandNode<SharedSuggestionProvider> commandNode = builder.build();
+        CommandNode<ClientSuggestionProvider> commandNode = builder.build();
 
-        CommandNode<SharedSuggestionProvider> existingNode = parent.getChild(commandNode.getName());
-        CommandNode<SharedSuggestionProvider> targetNode;
+        CommandNode<ClientSuggestionProvider> existingNode = parent.getChild(commandNode.getName());
+        CommandNode<ClientSuggestionProvider> targetNode;
 
         if (existingNode != null) {
             targetNode = existingNode;
@@ -171,18 +171,18 @@ public class SuggestionManager {
     }
 
     @SuppressWarnings ("unchecked")
-    private void removeAliases(CommandNode<SharedSuggestionProvider> parent, List<AliasNode> nodesToRemove) {
+    private void removeAliases(CommandNode<ClientSuggestionProvider> parent, List<AliasNode> nodesToRemove) {
         if (nodesToRemove == null || nodesToRemove.isEmpty()) return;
         if (parent == null) return;
 
-        Map<String, CommandNode<SharedSuggestionProvider>> childrenMap;
-        Map<String, LiteralCommandNode<SharedSuggestionProvider>> literalsMap;
-        Map<String, CommandNode<SharedSuggestionProvider>> argumentsMap;
+        Map<String, CommandNode<ClientSuggestionProvider>> childrenMap;
+        Map<String, LiteralCommandNode<ClientSuggestionProvider>> literalsMap;
+        Map<String, CommandNode<ClientSuggestionProvider>> argumentsMap;
 
         try {
-            childrenMap = (Map<String, CommandNode<SharedSuggestionProvider>>) childrenField.get(parent);
-            literalsMap = (Map<String, LiteralCommandNode<SharedSuggestionProvider>>) literalsField.get(parent);
-            argumentsMap = (Map<String, CommandNode<SharedSuggestionProvider>>) argumentsField.get(parent);
+            childrenMap = (Map<String, CommandNode<ClientSuggestionProvider>>) childrenField.get(parent);
+            literalsMap = (Map<String, LiteralCommandNode<ClientSuggestionProvider>>) literalsField.get(parent);
+            argumentsMap = (Map<String, CommandNode<ClientSuggestionProvider>>) argumentsField.get(parent);
         } catch (Exception e) {
             QuickAliasLogger.error("Failed to access CommandNode fields via reflection", e);
             return;
@@ -195,7 +195,7 @@ public class SuggestionManager {
             boolean isVariable = alias.isVariable();
             String name = isVariable ? alias.getVariableName() : alias.getName();
 
-            CommandNode<SharedSuggestionProvider> childNode = childrenMap.get(name);
+            CommandNode<ClientSuggestionProvider> childNode = childrenMap.get(name);
 
             if (childNode != null) {
                 removeAliases(childNode, alias.getChildren());

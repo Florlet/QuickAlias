@@ -5,8 +5,9 @@ import com.florlet.quickalias.config.ConfigManager;
 import com.florlet.quickalias.core.VariableResolver;
 import com.florlet.quickalias.mixin.ChatScreenAccessor;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.ChatScreen;
+import net.minecraft.client.input.MouseButtonEvent;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,19 +54,18 @@ public class ShortcutOverlay {
         return visible;
     }
 
-    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
         if (!visible) return false;
 
         List<AliasNode> roots = ConfigManager.getInstance().getConfig().aliases;
         if (roots.size() <= MAX_VISIBLE_ROWS) return false;
 
-        // Use scrollY (vertical scroll)
-        if (scrollY < 0) {
+        if (delta < 0) {
             if (scrollOffsetL1 < roots.size() - MAX_VISIBLE_ROWS) {
                 scrollOffsetL1++;
                 return true;
             }
-        } else if (scrollY > 0) {
+        } else if (delta > 0) {
             if (scrollOffsetL1 > 0) {
                 scrollOffsetL1--;
                 return true;
@@ -74,7 +74,7 @@ public class ShortcutOverlay {
         return false;
     }
 
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, int anchorX, int anchorY) {
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, int anchorX, int anchorY) {
         if (!visible) return;
 
         List<AliasNode> roots = ConfigManager.getInstance().getConfig().aliases;
@@ -96,10 +96,11 @@ public class ShortcutOverlay {
             visibleRoots = roots.subList(scrollOffsetL1, scrollOffsetL1 + visibleCount);
         }
 
-        renderMenuLevel(graphics, visibleRoots, l1X, l1Y, menuWidth, itemHeight, mouseX, mouseY);
+        renderMenuLevel(guiGraphics, visibleRoots, l1X, l1Y, menuWidth, itemHeight, mouseX, mouseY);
 
         if (roots.size() > MAX_VISIBLE_ROWS) {
-            renderScrollBar(graphics, l1X + menuWidth - 2, l1Y, l1Height, roots.size(), visibleCount, scrollOffsetL1);
+            renderScrollBar(guiGraphics, l1X + menuWidth - 2, l1Y, l1Height, roots.size(), visibleCount,
+                            scrollOffsetL1);
         }
 
         AliasNode hoveredL1 = getHoveredNode(visibleRoots, l1X, l1Y, menuWidth, itemHeight, mouseX, mouseY);
@@ -157,8 +158,7 @@ public class ShortcutOverlay {
             if (currentMenuY < 0) currentMenuY = 0;
 
             storeY(i + 1, currentMenuY);
-
-            renderMenuLevel(graphics, children, currentMenuX, currentMenuY, menuWidth, itemHeight, mouseX, mouseY);
+            renderMenuLevel(guiGraphics, children, currentMenuX, currentMenuY, menuWidth, itemHeight, mouseX, mouseY);
 
             AliasNode hoveredChild = getHoveredNode(children, currentMenuX, currentMenuY, menuWidth, itemHeight, mouseX,
                                                     mouseY);
@@ -175,12 +175,12 @@ public class ShortcutOverlay {
         }
     }
 
-    private void renderScrollBar(GuiGraphics graphics, int x, int y, int height, int total, int visible, int offset) {
+    private void renderScrollBar(GuiGraphicsExtractor guiGraphics, int x, int y, int height, int total, int visible,
+                                 int offset) {
         int barHeight = (int) ((float) visible / total * height);
         if (barHeight < 2) barHeight = 2;
         int barY = y + (int) ((float) offset / total * height);
-
-        graphics.fill(x, barY, x + 1, barY + barHeight, 0xFFFFFFFF);
+        guiGraphics.fill(x, barY, x + 1, barY + barHeight, 0xFFFFFFFF);
     }
 
     private void storeY(int levelIndex, int y) {
@@ -205,8 +205,8 @@ public class ShortcutOverlay {
         return mx >= x && mx < x + w && my >= y && my < y + h;
     }
 
-    private void renderMenuLevel(GuiGraphics graphics, List<AliasNode> nodes, int x, int y, int w, int h, int mx,
-                                 int my) {
+    private void renderMenuLevel(GuiGraphicsExtractor guiGraphics, List<AliasNode> nodes, int x, int y, int w, int h,
+                                 int mx, int my) {
         if (nodes == ConfigManager.getInstance().getConfig().aliases && nodes.size() <= MAX_VISIBLE_ROWS) {
             storeY(0, y);
         } else if (nodes == ConfigManager.getInstance().getConfig().aliases) {
@@ -217,18 +217,18 @@ public class ShortcutOverlay {
         int bgColor = 0xF0100010;
 
         // Background
-        graphics.fillGradient(x, y, x + w, y + totalH, bgColor, bgColor);
+        guiGraphics.fillGradient(x, y, x + w, y + totalH, bgColor, bgColor);
 
         // Manual Border
         int borderColor = 0xFFFFFFFF;
         // Top
-        graphics.fill(x, y, x + w, y + 1, borderColor);
+        guiGraphics.fill(x, y, x + w, y + 1, borderColor);
         // Bottom
-        graphics.fill(x, y + totalH - 1, x + w, y + totalH, borderColor);
+        guiGraphics.fill(x, y + totalH - 1, x + w, y + totalH, borderColor);
         // Left
-        graphics.fill(x, y, x + 1, y + totalH, borderColor);
+        guiGraphics.fill(x, y, x + 1, y + totalH, borderColor);
         // Right
-        graphics.fill(x + w - 1, y, x + w, y + totalH, borderColor);
+        guiGraphics.fill(x + w - 1, y, x + w, y + totalH, borderColor);
 
         for (int i = 0; i < nodes.size(); i++) {
             AliasNode node = nodes.get(i);
@@ -238,19 +238,19 @@ public class ShortcutOverlay {
             boolean isActive = activePath.contains(node);
 
             if (isHovered || isActive) {
-                graphics.fill(x + 1, itemY, x + w - 1, itemY + h, 0x80FFFFFF);
+                guiGraphics.fill(x + 1, itemY, x + w - 1, itemY + h, 0x80FFFFFF);
             }
 
-            int color = node.isLeaf() ? 0xFFFFFF : 0x66AAFF;
+            int color = node.isLeaf() ? 0xFFFFFFFF : 0xFF66AAFF;
 
             // Use node specific colors for variables/constants
-            if (node.isVariable()) color = 0xFFAA00;
-            if (node.isEndNode()) color = 0xAA55FF;
+            if (node.isVariable()) color = 0xFFFFAA00;
+            if (node.isEndNode()) color = 0xFFAA55FF;
 
             String text = node.getName();
             if (!node.isLeaf()) text += " >";
 
-            graphics.drawString(Minecraft.getInstance().font, text, x + 4, itemY + (h - 8) / 2, color);
+            guiGraphics.text(Minecraft.getInstance().font, text, x + 4, itemY + (h - 8) / 2, color);
         }
     }
 
@@ -265,9 +265,15 @@ public class ShortcutOverlay {
         return null;
     }
 
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(MouseButtonEvent event, boolean handled) {
+        if (!visible) return false;
+
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+
         if (!activePath.isEmpty()) {
-            AliasNode last = activePath.get(activePath.size() - 1);
+            AliasNode last = activePath.getLast();
             // Allow clicking if leaf, end node, OR variable node (for input filling)
             if (last != null && (last.isLeaf() || last.isEndNode() || last.isVariable())) {
                 executeNode();

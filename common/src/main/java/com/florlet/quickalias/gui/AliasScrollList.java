@@ -3,8 +3,9 @@ package com.florlet.quickalias.gui;
 import com.florlet.quickalias.config.AliasNode;
 import com.florlet.quickalias.config.ConfigManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
@@ -22,7 +23,7 @@ import java.util.regex.Pattern;
  *
  * @author Florlet
  */
-public class AliasScrollList extends ObjectSelectionList<AliasScrollList.AliasEntry> {
+public class AliasScrollList extends ObjectSelectionList<AliasScrollList.@NotNull AliasEntry> {
     private final SettingsScreen parentScreen;
     private final boolean isImportMode;
     private Set<String> conflictNames = Collections.emptySet();
@@ -88,11 +89,6 @@ public class AliasScrollList extends ObjectSelectionList<AliasScrollList.AliasEn
         return this.width - 20;
     }
 
-    @Override
-    protected int getScrollbarPosition() {
-        return this.width - 10;
-    }
-
     // Helper to format command string with highlighted constants
     private Component formatCommand(String cmd) {
         MutableComponent root = Component.empty();
@@ -102,20 +98,20 @@ public class AliasScrollList extends ObjectSelectionList<AliasScrollList.AliasEn
             // Text before constant
             if (m.start() > lastEnd) {
                 root.append(Component.literal(cmd.substring(lastEnd, m.start()))
-                                    .withStyle(Style.EMPTY.withColor(0xAAAAAA)));
+                                    .withStyle(Style.EMPTY.withColor(0xFFAAAAAA)));
             }
             // The Constant itself (Purple)
-            root.append(Component.literal(m.group()).withStyle(Style.EMPTY.withColor(0xAA55FF)));
+            root.append(Component.literal(m.group()).withStyle(Style.EMPTY.withColor(0xFFAA55FF)));
             lastEnd = m.end();
         }
         // Remaining text
         if (lastEnd < cmd.length()) {
-            root.append(Component.literal(cmd.substring(lastEnd)).withStyle(Style.EMPTY.withColor(0xAAAAAA)));
+            root.append(Component.literal(cmd.substring(lastEnd)).withStyle(Style.EMPTY.withColor(0xFFAAAAAA)));
         }
         return root;
     }
 
-    public class AliasEntry extends ObjectSelectionList.Entry<AliasEntry> {
+    public class AliasEntry extends ObjectSelectionList.Entry<@NotNull AliasEntry> {
         private final AliasNode node;
         private final FlatButton upBtn;
         private final FlatButton downBtn;
@@ -136,7 +132,7 @@ public class AliasScrollList extends ObjectSelectionList<AliasScrollList.AliasEn
                                                       new AliasEditorScreen(AliasScrollList.this.parentScreen, node,
                                                                             false)));
                 this.deleteBtn = new FlatButton(0, 0, 16, 16,
-                                                Component.literal("×").withStyle(s -> s.withColor(0xFF5555)), 0, -1,
+                                                Component.literal("×").withStyle(s -> s.withColor(0xFFFF5555)), 0, 1,
                                                 btn -> {
                                                     ConfigManager.getInstance().getConfig().aliases.remove(node);
                                                     ConfigManager.getInstance().save();
@@ -162,63 +158,58 @@ public class AliasScrollList extends ObjectSelectionList<AliasScrollList.AliasEn
         }
 
         @Override
-        public void render(@NotNull GuiGraphics guiGraphics, int index, int top, int left, int width, int height,
-                           int mouseX, int mouseY, boolean isSelected, float partialTick) {
+        public void extractContent(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, boolean hovered,
+                                   float delta) {
+            int top = this.getY();
+            int left = this.getX();
+            int width = getRowWidth();
+            int entryHeight = 24;
 
             int bgTop = top + 2;
-            int bgBottom = top + height - 2;
+            int bgBottom = top + entryHeight - 2;
             guiGraphics.fill(left, bgTop, left + width, bgBottom, 0x15FFFFFF);
 
             int currentX = left + 4;
             int centerY = bgTop + (bgBottom - bgTop) / 2;
 
             if (!isImportMode) {
-                int btnHeight = (bgBottom - bgTop) / 2;
                 if (currentFilter.isEmpty()) {
-                    this.upBtn.setX(currentX);
-                    this.upBtn.setY(bgTop);
-                    this.upBtn.setHeight(btnHeight);
-                    this.upBtn.render(guiGraphics, mouseX, mouseY, partialTick);
-                    float scale = 0.7f;
-                    guiGraphics.pose().pushPose();
-                    guiGraphics.pose().scale(scale, scale, 1.0f);
-                    guiGraphics.drawString(Minecraft.getInstance().font, "▲",
-                                           (int) ((currentX + 7 - (Minecraft.getInstance().font.width(
-                                                   "▲") * scale / 2)) / scale), (int) ((bgTop + 1) / scale), 0xFFFFFF);
-                    guiGraphics.pose().popPose();
+                    int btnHeight = (bgBottom - bgTop) / 2;
 
-                    this.downBtn.setX(currentX);
-                    this.downBtn.setY(bgTop + btnHeight);
-                    this.downBtn.setHeight(btnHeight);
-                    this.downBtn.render(guiGraphics, mouseX, mouseY, partialTick);
-                    guiGraphics.pose().pushPose();
-                    guiGraphics.pose().scale(scale, scale, 1.0f);
-                    guiGraphics.drawString(Minecraft.getInstance().font, "▼",
-                                           (int) ((currentX + 7 - (Minecraft.getInstance().font.width(
-                                                   "▼") * scale / 2)) / scale),
-                                           (int) ((bgTop + btnHeight * 2 - 7) / scale), 0xFFFFFF);
-                    guiGraphics.pose().popPose();
+                    upBtn.setX(currentX);
+                    upBtn.setY(bgTop);
+                    upBtn.setHeight(btnHeight);
+                    upBtn.extractRenderState(guiGraphics, mouseX, mouseY, delta);
+
+                    guiGraphics.text(Minecraft.getInstance().font, "▲", currentX + 4, bgTop + 2, 0xFFFFFFFF);
+
+                    downBtn.setX(currentX);
+                    downBtn.setY(bgTop + btnHeight);
+                    downBtn.setHeight(btnHeight);
+                    downBtn.extractRenderState(guiGraphics, mouseX, mouseY, delta);
+
+                    guiGraphics.text(Minecraft.getInstance().font, "▼", currentX + 4, bgTop + btnHeight,
+                                     0xFFFFFFFF);
                 }
                 currentX += 16;
             }
 
             // Name & Color Logic
             String nameText = "/" + node.getName();
-            int nameColor = 0xFFFFFF;
-
+            int nameColor = 0xFFFFFFFF;
             if (isImportMode && conflictNames.contains(node.getName().toLowerCase())) {
-                nameColor = 0xFF5555; // Conflict Red
+                nameColor = 0xFFFF5555; // Conflict Red
             } else if (node.isVariable()) {
-                nameColor = 0xFFAA00; // Variable Orange
+                nameColor = 0xFFFFAA00; // Variable Orange
             } else if (node.isEndNode()) {
-                nameColor = 0xAA55FF; // End Purple
+                nameColor = 0xFFAA55FF; // End Purple
             }
 
-            guiGraphics.drawString(Minecraft.getInstance().font, nameText, currentX, centerY - 4, nameColor);
+            guiGraphics.text(Minecraft.getInstance().font, nameText, currentX, centerY - 4, nameColor);
             int nameWidth = Minecraft.getInstance().font.width(nameText);
 
             int arrowX = currentX + nameWidth + 5;
-            guiGraphics.drawString(Minecraft.getInstance().font, "->", arrowX, centerY - 4, 0x888888);
+            guiGraphics.text(Minecraft.getInstance().font, "->", arrowX, centerY - 4, 0xFF888888);
             int arrowWidth = Minecraft.getInstance().font.width("->");
 
             int contentX = arrowX + arrowWidth + 5;
@@ -241,7 +232,7 @@ public class AliasScrollList extends ObjectSelectionList<AliasScrollList.AliasEn
                 String renderedStr = Minecraft.getInstance().font.plainSubstrByWidth(displayStr, availableWidth);
                 if (renderedStr.length() < displayStr.length()) renderedStr += "...";
 
-                guiGraphics.drawString(Minecraft.getInstance().font, renderedStr, contentX, centerY - 4, 0x55AAFF);
+                guiGraphics.text(Minecraft.getInstance().font, renderedStr, contentX, centerY - 4, 0xFF55AAFF);
 
             } else {
                 // Display Commands with highlighting
@@ -258,30 +249,32 @@ public class AliasScrollList extends ObjectSelectionList<AliasScrollList.AliasEn
                 if (truncatedRaw.length() < rawCmds.length()) truncatedRaw += "...";
 
                 Component renderComp = formatCommand(truncatedRaw);
-                guiGraphics.drawString(Minecraft.getInstance().font, renderComp, contentX, centerY - 4, 0xFFFFFF);
+                guiGraphics.text(Minecraft.getInstance().font, renderComp, contentX, centerY - 4, 0xFFFFFFFF);
             }
 
             if (!isImportMode) {
                 int btnY = centerY - 8;
-                this.deleteBtn.setX(left + width - 20);
-                this.deleteBtn.setY(btnY);
-                this.deleteBtn.render(guiGraphics, mouseX, mouseY, partialTick);
-                this.editBtn.setX(left + width - 55);
-                this.editBtn.setY(btnY);
-                this.editBtn.render(guiGraphics, mouseX, mouseY, partialTick);
+
+                editBtn.setX(left + width - 55);
+                editBtn.setY(btnY);
+                editBtn.extractRenderState(guiGraphics, mouseX, mouseY, delta);
+
+                deleteBtn.setX(left + width - 20);
+                deleteBtn.setY(btnY);
+                deleteBtn.extractRenderState(guiGraphics, mouseX, mouseY, delta);
             }
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (isImportMode) return false;
+        public boolean mouseClicked(@NotNull MouseButtonEvent event, boolean handled) {
+            if (isImportMode || handled) return false;
             if (currentFilter.isEmpty()) {
-                if (this.upBtn.mouseClicked(mouseX, mouseY, button)) return true;
-                if (this.downBtn.mouseClicked(mouseX, mouseY, button)) return true;
+                if (upBtn.mouseClicked(event, handled)) return true;
+                if (downBtn.mouseClicked(event, handled)) return true;
             }
-            if (this.editBtn.mouseClicked(mouseX, mouseY, button)) return true;
-            if (this.deleteBtn.mouseClicked(mouseX, mouseY, button)) return true;
-            return super.mouseClicked(mouseX, mouseY, button);
+            if (editBtn.mouseClicked(event, handled)) return true;
+            if (deleteBtn.mouseClicked(event, handled)) return true;
+            return super.mouseClicked(event, handled);
         }
 
         @Override
