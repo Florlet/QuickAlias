@@ -2,7 +2,6 @@ package com.florlet.quickalias.config;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.regex.Pattern;
 
 /**
@@ -12,16 +11,11 @@ import java.util.regex.Pattern;
  * @author Florlet
  */
 public class AliasNode {
-    private String id;
     private String name;
     private List<String> commands;
     private List<AliasNode> children;
 
-    // Matches {var}, but not \{var}
-    private static final Pattern VARIABLE_PATTERN = Pattern.compile("^\\{[^}]+}$");
-
     public AliasNode() {
-        this.id = UUID.randomUUID().toString();
         this.children = new ArrayList<>();
         this.commands = new ArrayList<>();
         this.name = "";
@@ -38,7 +32,6 @@ public class AliasNode {
      * @param other The node to copy.
      */
     public AliasNode(AliasNode other) {
-        this.id = UUID.randomUUID().toString();
         this.name = other.name;
         this.commands = new ArrayList<>(other.commands);
         this.children = new ArrayList<>();
