@@ -15,6 +15,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
@@ -138,6 +139,19 @@ public class SuggestionManager {
                                     suggestionsBuilder.suggest(levelKey.location().toString());
                                 }
                             }
+                            return suggestionsBuilder.buildFuture();
+                        });
+            } else if ("block".equals(nodeName)) {
+                builder = RequiredArgumentBuilder.<SharedSuggestionProvider, ResourceLocation>argument(nodeName, ResourceLocationArgument.id())
+
+                        .suggests((context, suggestionsBuilder) -> {
+                            String remaining = suggestionsBuilder.getRemaining().toLowerCase();
+                            BuiltInRegistries.BLOCK.forEach(block -> {
+                                ResourceLocation blockId = BuiltInRegistries.BLOCK.getKey(block);
+                                if (blockId.getPath().toLowerCase().startsWith(remaining)) {
+                                    suggestionsBuilder.suggest(blockId.toString());
+                                }
+                            });
                             return suggestionsBuilder.buildFuture();
                         });
             } else {
