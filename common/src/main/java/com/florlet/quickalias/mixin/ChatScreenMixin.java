@@ -197,6 +197,9 @@ public class ChatScreenMixin extends Screen {
     @Inject (method = "handleChatInput", at = @At ("HEAD"), cancellable = true)
     private void onHandleChatInput(String message, boolean addToHistory, CallbackInfo ci) {
         if (InputHandler.handleChatInput(message)) {
+            if (addToHistory) {
+                Minecraft.getInstance().gui.getChat().addRecentChat(message);
+            }
             ci.cancel();
         }
     }
